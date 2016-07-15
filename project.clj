@@ -14,6 +14,7 @@
    [com.datomic/datomic-pro "0.9.5359"
     :exclusions [joda-time]]
    [com.ninjudd/ring-async "0.3.4"]
+   [environ "1.0.3"]
    [fogus/ring-edn "0.3.0"]
    [friend-oauth2 "0.1.3"]
    [hiccup "1.0.5"]
@@ -36,7 +37,8 @@
   :source-paths ["src"]
   :plugins [[lein-cljsbuild "1.1.3"]
             [lein-environ "1.0.0"]
-            [lein-pprint "1.1.1"]]
+            [lein-pprint "1.1.1"]
+            [lein-ring "0.9.7"]]
   :javac-options ["-target" "1.8" "-source" "1.8"]
   :license "GPLv2"
   :jvm-opts ["-Xmx6G"
@@ -61,6 +63,7 @@
                         :output-dir "resources/public/js/out"
                         :source-map "resources/public/js/main.js.map"}}]}
   :main web.core
+  :ring {:handler web.core/secure-app}
   :profiles {:uberjar {:aot :all}
              :dev {:dependencies [[datomic-schema-grapher "0.0.1"]]
                    :plugins [[jonase/eastwood "0.2.3"]

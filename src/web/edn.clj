@@ -32,7 +32,8 @@
   [handler]
   (fn [req]
     (if-let [body (and (edn-request? req) (:body req))]
-      (let [edn-params (binding [*read-eval* false] (-read-edn body))
+      (let [edn-params (binding [*read-eval* false]
+                         (-read-edn body))
             req* (assoc req
                    :edn-params edn-params
                    :params (merge (:params req) edn-params))]
