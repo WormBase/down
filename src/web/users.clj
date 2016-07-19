@@ -93,8 +93,8 @@
                               :grant_type "authorization_code"
                               :redirect_uri (format-config-uri client-config)}}})
 
-(defn- goog-credential-fn [token]
-  (if-let [u (d/entity (get-db) [:user/email (:id (:access-token token))])]
+(defn- goog-credential-fn [uri token]
+  (if-let [u (d/entity (get-db uri) [:user/email (:id (:access-token token))])]
     {:identity token
      :email (:user/email u)
      :wbperson (:person/id (:user/wbperson u))
@@ -110,11 +110,13 @@
     {:access_token (:access_token token)
      :id (:email id-token)}))
 
-(defn authenticate [request]
+(defn authenticate [uri handler]
   (let [allow-anon? (->> :trace-require-login env read-string zero?)]
-    (friend/authenticate {:allow-anon? allow-anon?
-                          :workflows [(oauth2/workflow
-                                       {:client-config client-config
-                                        :uri-config uri-config
-                                        :access-token-parsefn goog-token-parse
-                                        :credential-fn goog-credential-fn})]})))
+    (friend/authenticate
+     handler
+     {:allow-anon? allow-anon?
+      :workflows [(oauth2/workflow
+                   {:client-config client-config
+                    :uri-config uri-config
+                    :access-token-parsefn goog-token-parse
+                    :credential-fn (partial goog-credential-fn uri)})]})))
