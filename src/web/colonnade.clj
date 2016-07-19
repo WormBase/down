@@ -10,7 +10,7 @@
             [compojure.handler :as handler]
             [clojure.edn :as edn]
             [clojure.data.csv :refer (write-csv)]
-            [pseudoace.acedump :refer (ace-object dump-object *timestamps* *xrefs*)]))
+            [pseudoace.acedump :as acedump]))
 
 (defn- page [{:keys [db] :as req}]
   (html
@@ -105,27 +105,27 @@
                    (println class ":" (str \" o \"))))})
 
       "ace"
-      (binding [*timestamps* false
-                *xrefs*      true]
+      (binding [acedump/*timestamps* false
+                acedump/*xrefs*      true]
         (let [clid (:attribute (get columns keyset-column))]
           {:status 200
            :headers {"Content-Type" "text/plain"
                      "Content-Disposition" "attachment; filename=colonnade.ace"}
            :body (with-out-str
                    (doseq [[id] results]
-                     (dump-object (ace-object db [clid id]))))}))
+                     (acedump/dump-object (acedump/ace-object db [clid id]))))}))
 
 
       "acets"
-      (binding [*timestamps* true
-                *xrefs*      true]
+      (binding [acedump/*timestamps* true
+                acedump/*xrefs*      true]
         (let [clid (:attribute (get columns keyset-column))]
           {:status 200
            :headers {"Content-Type" "text/plain"
                      "Content-Disposition" "attachment; filename=colonnade.ace"}
            :body (with-out-str
                    (doseq [[id] results]
-                     (dump-object (ace-object db [clid id]))))}))
+                     (acedump/dump-object (acedump/ace-object db [clid id]))))}))
 
 
 
