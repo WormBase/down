@@ -27,6 +27,7 @@
    [prismatic/om-tools "0.4.0"]
    [ring "1.5.0"]
    [ring/ring-anti-forgery "1.0.1"]
+   [ring/ring-jetty-adapter "1.5.0"]
    [secretary "1.2.3"]
    [wormbase/pseudoace "0.4.9"]
    ;; Required?
