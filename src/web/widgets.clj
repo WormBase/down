@@ -1,7 +1,7 @@
 (ns web.widgets
-  (:use hiccup.core)
   (:require [datomic.api :as d :refer (db history q touch entity)]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [hiccup.core :refer (html)]))
 
 (def table-script
   "window.addEventListener('load', function(ev) {

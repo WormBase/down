@@ -13,44 +13,42 @@
    [web.db :refer (get-db)]
    ))
 
-(def uri (env :trace-user-db))
-
 (def schema
-  [{:db/id          #db/id[:db.part/db]
+  [{:db/id          (d/tempid :db.part/db)
     :db/ident       :user/name
     :db/valueType   :db.type/string
     :db/cardinality :db.cardinality/one
     :db/unique      :db.unique/identity
     :db.install/_attribute :db.part/db}
 
-   {:db/id          #db/id[:db.part/db]
+   {:db/id          (d/tempid :db.part/db)
     :db/ident       :user/email
     :db/valueType   :db.type/string
     :db/cardinality :db.cardinality/one
     :db/unique      :db.unique/identity
     :db.install/_attribute :db.part/db}
 
-   {:db/id          #db/id[:db.part/db]
+   {:db/id          (d/tempid :db.part/db)
     :db/ident       :user/x500-cn
     :db/valueType   :db.type/string
     :db/cardinality :db.cardinality/many
     :db/unique      :db.unique/value
     :db.install/_attribute :db.part/db}
 
-   {:db/id          #db/id[:db.part/db]
+   {:db/id          (d/tempid :db.part/db)
     :db/ident       :user/bcrypt-passwd
     :db/valueType   :db.type/string
     :db/cardinality :db.cardinality/one
     :db/noHistory   true
     :db.install/_attribute :db.part/db}
 
-  {:db/id           #db/id[:db.part/db]
+  {:db/id           (d/tempid :db.part/db)
    :db/ident        :user/wbperson
    :db/valueType    :db.type/ref
    :db/cardinality  :db.cardinality/one
    :db.install/_attribute :db.part/db}
 
-  {:db/id           #db/id[:db.part/db]
+  {:db/id           (d/tempid :db.part/db)
    :db/ident        :wormbase/curator
    :db/valueType    :db.type/ref
    :db/cardinality  :db.cardinality/one
@@ -63,7 +61,7 @@
 
 (defn setup-schema
   "Setup the users' schema."
-  []
+  [uri]
   (let [con (d/connect uri)]
     @(d/transact con schema)
     @(d/transact con (butlast curation-schema))
