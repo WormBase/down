@@ -173,7 +173,7 @@
             [?var :variation/gene ?gh]
             [?var :variation/phenotype ?ph]
             [?ph :variation.phenotype/phenotype ?pheno]])
- 
+
 (def q-gene-var-not-pheno
    '[:find ?pheno (distinct ?ph)
      :in $ ?gid
@@ -282,7 +282,7 @@
                      ": "
                      genotype
                      [:br]))
-                     
+
                   (for [remark (:phenotype-info/remark holder)]
                     (html
                      [:b "Remark"]
@@ -295,7 +295,7 @@
                   [:div.v.ui-icon.ui-icon-triangle-1-s]]])))
 
            ]])]])))
-        
+
 
 (defn gene-phenotypes-widget [db id]
   (let [gids (q '[:find ?g :in $ ?gid :where [?g :gene/id ?gid]] db id)]
@@ -339,7 +339,7 @@
       (seq (:molecular-change/amber-uag-or-ochre-uaa change))
       (seq (:molecular-change/amber-uag-or-opal-uga change))))
 
-                                         
+
 
 (defn gene-genetics-alleles-table [db id alleles]
   (let [alleles (filter :variation/allele alleles)]
@@ -393,7 +393,7 @@
                                     :molecular-change/utr-5 "5' UTR"
                                     :molecular-change/utr-3 "3' UTR"}
                                    changes))))]
-            
+
 
            [:td
             (let [changes (set (mapcat keys (:variation/predicted-cds allele)))]
@@ -423,7 +423,7 @@
               (list
                (if-let [n (first (:molecular-change/missense cc))]
                  [:span (:molecular-change.missense/int n)])))]
-            
+
 
            [:td
             (for [cc (:variation/predicted-cds allele)
@@ -457,7 +457,7 @@
                 strain-list))]
 
            ])]]])))
-        
+
 (defn gene-genetics-poly-table [db id alleles]
   (let [alleles (filter (complement :variation/allele) alleles)]
     (list
@@ -485,7 +485,7 @@
                                           (if (:variation/predicted-snp allele) "Predicted SNP")]))
                             ["unknown"])]
               (str/join ", " types))]
-           
+
            [:td
             (cond
              (:variation/substitution allele)
@@ -516,7 +516,7 @@
                                     :molecular-change/utr-5 "5' UTR"
                                     :molecular-change/utr-3 "3' UTR"}
                                    changes))))]
-            
+
 
            [:td
             (let [changes (set (mapcat keys (:variation/predicted-cds allele)))]
@@ -581,7 +581,7 @@
    (for [strain strains]
       [:a.strain-link {:href (str "/view/strain/" (:strain/id strain))}
        (:strain/id strain)])))
-            
+
 
 (defn gene-genetics-strain-table [db id]
   (let [gene    (entity db [:gene/id id])
@@ -649,7 +649,7 @@
            (if (is-cgc? strain)
              [:a {:href (str "https://cgcdb.msi.umn.edu/search.php?st=" (:strain/id strain))} "yes"]
              "no")]])]]
-                                        
+
 
    )))
 
@@ -736,7 +736,7 @@
 
            [:div.field
             [:div.field-title "Polymorphisms & Natural variants:"]
-            [:div.field-content 
+            [:div.field-content
              (gene-genetics-poly-table db id alleles)]]
 
            [:div.field
