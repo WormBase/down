@@ -50,7 +50,8 @@
              ;; Uncomment to prevent missing trace (HotSpot optimisation)
              ;; "-XX:-OmitStackTraceInFastThrow"
              ]
-  :env {:trace-db "datomic:dev://localhost:4334/geneace-ws252"
+  :env {:trace-db "datomic:free://localhost:4334/WS254"
+        :trace-user-db "datomic:free://localhost:4334/users"
         :trace-port "8130"
         :trace-accept-rest-query "1"}
   :resource-paths ["resources"]
