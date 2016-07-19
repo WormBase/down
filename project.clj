@@ -36,11 +36,11 @@
   :description "WormBase curation tools"
   :source-paths ["src"]
   :plugins [[lein-cljsbuild "1.1.3"]
-            [lein-environ "1.0.0"]
             [lein-pprint "1.1.1"]
             [lein-ring "0.9.7"]]
   :javac-options ["-target" "1.8" "-source" "1.8"]
   :license "GPLv2"
+  :min-lein-version "2.0.0"
   :jvm-opts ["-Xmx6G"
              ;; same GC options as the transactor,
              "-XX:+UseG1GC" "-XX:MaxGCPauseMillis=50"
