@@ -64,9 +64,14 @@
                         :output-dir "resources/public/js/out"
                         :source-map "resources/public/js/main.js.map"}}]}
   :main web.core
+  :aot [web.core]
   :ring {:handler web.core/secure-app}
   :profiles {:uberjar {:aot :all}
-             :dev {:dependencies [[datomic-schema-grapher "0.0.1"]]
+             :datomic-free {:dependencies [[com.datomic/datomic-free "0.9.5359"
+                                            :exclusions [joda-time]]]
+                            :exclusions [com.datomic/datomic-pro]}
+             :dev {:dependencies [[datomic-schema-grapher "0.0.1"]
+                                  [ring/ring-devel "1.5.0"]]
                    :plugins [[jonase/eastwood "0.2.3"]
                              [lein-ancient "0.6.8"]
                              [lein-bikeshed "0.3.0"]
