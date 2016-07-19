@@ -96,7 +96,9 @@
                 :quote? (constantly true)))}
 
       "keyset"
-      (let [class (:pace/identifies-class (entity db (:attribute (get columns keyset-column))))]
+      (let [class (:pace/identifies-class (entity
+                                           db
+                                           (:attribute (get columns keyset-column))))]
         {:status 200
          :headers {"Content-Type" "text/plain"
                    "Content-Disposition" "attachment; filename=colonnade.ace"}
