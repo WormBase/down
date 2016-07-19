@@ -2,7 +2,8 @@
   "Ring middleware to prevent CSRF attacks with an anti-forgery token."
   (:use [hiccup core form])
   (:require [crypto.random :as random]
-            [crypto.equality :as crypto]))
+            [crypto.equality :as crypto]
+            [environ.core :refer (env)]))
 
 (def ^:dynamic
   ^{:doc "Binding that stores a anti-forgery token that must be included
@@ -33,16 +34,17 @@
 (defn- valid-request? [request read-token]
   (let [user-token   (read-token request)
         stored-token (session-token request)]
-    (and user-token
-         stored-token
-         (crypto/eq? user-token stored-token))))
+    ;; XXX: Is this safe? passing back true if require-login is not set?
+    (or (->> :trace-require-login env read-string zero?)
+        (and user-token
+             stored-token
+             (crypto/eq? user-token stored-token)))))
 
 (defn- get-request? [{method :request-method}]
   (or (= :head method)
       (= :get method)))
 
 (defn- ssl-auth-request? [{cert :ssl-client-cert :as req}]
-  (println req)
   cert)
 
 (defn- access-denied [body]
