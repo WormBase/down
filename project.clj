@@ -29,11 +29,12 @@
    [ring/ring-anti-forgery "1.0.1"]
    [ring/ring-jetty-adapter "1.5.0"]
    [secretary "1.2.3"]
-   [wormbase/pseudoace "0.4.9"]
+   [wormbase/pseudoace "0.4.10"]
    ;; Required?
    ;; [org.clojure/tools.cli "0.3.3"]
    ;; [org.clojars.hozumi/clj-commons-exec "1.0.6" ]
    ]
+
   :description "WormBase curation tools"
   :source-paths ["src"]
   :plugins [[lein-cljsbuild "1.1.3"]
