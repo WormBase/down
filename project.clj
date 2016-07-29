@@ -1,6 +1,4 @@
 (defproject wormbase/trace "0.1-SNAPSHOT"
-  :repositories {"my.datomic.com" {:url "https://my.datomic.com/repo"
-                                   :creds :gpg}}
   :dependencies
   [[base64-clj "0.1.1"]
    [bk/ring-gzip "0.1.1"]
@@ -52,8 +50,7 @@
              ;; Uncomment to prevent missing trace (HotSpot optimisation)
              ;; "-XX:-OmitStackTraceInFastThrow"
              ]
-  :env {:trace-db "datomic:free://localhost:4334/WS254"
-        :trace-user-db "datomic:free://localhost:4334/users"
+  :env {:trace-db "datomic:ddb://us-east-1/wormbase/WS254"
         :trace-port "8130"
         :trace-accept-rest-query "1"}
   :resource-paths ["resources"]
@@ -67,16 +64,19 @@
                         :source-map "resources/public/js/main.js.map"}}]}
   :main web.core
   :aot [web.core]
-  :ring {:handler web.core/secure-app}
+  :ring {:init web.core/init
+         :handler web.core/handler
+         :nrepl {:start? true :port 8131}}
   :profiles {:uberjar {:aot :all}
-             :datomic-free {:dependencies [[com.datomic/datomic-free "0.9.5359"
+             :datomic-free {:dependencies [[com.datomic/datomic-free "0.9.5385"
                                             :exclusions [joda-time]]]
                             :exclusions [com.datomic/datomic-pro]}
-             :dev {:dependencies [[datomic-schema-grapher "0.0.1"]
+             :dev {:dependencies [[acyclic/squiggly-clojure "0.1.6"]
                                   [ring/ring-devel "1.5.0"]]
-                   :plugins [[jonase/eastwood "0.2.3"]
-                             [lein-ancient "0.6.8"]
-                             [lein-bikeshed "0.3.0"]
-                             [lein-kibit "0.1.2"]
-                             [lein-ns-dep-graph "0.1.0-SNAPSHOT"]]
+                   :plugins [[cider/cider-nrepl "0.13.0"]
+                             [lein-ancient "0.6.8"]]
+                   :env {:squiggly {:checkers [:eastwood]}}
+                   :ring {:init web.core/init
+                          :handler web.core/handler
+                          :nrepl {:start? true :port 8131}}
                    :resource-paths ["test/resources"]}})

@@ -9,6 +9,7 @@
    [datomic.api :as d]
    [environ.core :refer (env)]
    [hiccup.core :refer (html)]
+   [mount.core :as mount]
    [pseudoace.utils :refer (parse-int)]
    [ring.adapter.jetty :refer (run-jetty)]
    [ring.middleware.cookies :refer (wrap-cookies)]
@@ -22,7 +23,7 @@
    [web.anti-forgery :refer (wrap-anti-forgery-ssl)]
    [web.colonnade :refer (colonnade post-query)]
    [web.curate.core :refer (curation-forms)]
-   [web.db :refer (get-db)]
+   [web.db :refer (datomic-conn)]
    [web.edn :refer (wrap-edn-params-2)]
    [web.locatable-api :refer (feature-api)]
    [web.query :refer (post-query-restful)]
@@ -43,18 +44,17 @@
     [[gene-name ?g ?n] [?g :gene/sequence-name ?n]]
     [[gene-name ?g ?n] [?o :gene.other-name/text ?n] [?g :gene/other-name ?o]]])
 
-(defn get-gene-by-name [name]
-  (let [ddb (get-db uri)
-        genes (d/q '[:find ?gid
+(defn get-gene-by-name [db name]
+  (let [genes (d/q '[:find ?gid
                      :in $ % ?name
                      :where (gene-name ?g ?name)
                      [?g :gene/id ?gid]]
-                 ddb rules name)
+                   db rules name)
         oldmems (d/q '[:find ?gcid
                        :in $ ?name
                        :where [?gc :gene-class/old-member ?name]
                               [?gc :gene-class/id ?gcid]]
-                     ddb name)]
+                     db name)]
     (html
      [:h1 "Matches for " name]
      [:ul
@@ -68,12 +68,11 @@
          (for [[gcid] o]
            [:a {:href (str "/view/gene-class/" gcid)} gcid])]]))))
 
-
 (defn parse-int-if [s]
   (if s
     (Integer/parseInt s)))
 
-(defn app-routes []
+(defn app-routes [db]
   (routes
    (GET "/" [] "hello")
    (friend/logout (ANY "/logout" [] (redirect "/")))
@@ -87,20 +86,20 @@
       (= (params "txns") "true")))
    (GET "/attr2/:entid/:attrns/:attrname" {params :params}
      (trace/get-raw-attr2
-      (get-db uri)
+      db
       (Long/parseLong (:entid params))
-      (str (:attrns params) "/" (:attrname params)
-           (= (params "txns") "true"))))
+      (str (:attrns params) "/" (:attrname params))
+           (= (params "txns") "true")))
    (GET "/txns" {params :params}
      (trace/get-raw-txns2
-      (get-db uri)
+      db
       (let [ids (params :id)]
         (if (string? ids)
           [(Long/parseLong ids)]
           (map #(Long/parseLong %) ids)))))
    (GET "/history2/:entid/:attrns/:attrname" {params :params}
      (trace/get-raw-history2
-      (get-db uri)
+      db
       (Long/parseLong (:entid params))
       (keyword (.substring (:attrns params) 1) (:attrname params))))
    (GET "/ent/:id" {params :params db :db}
@@ -110,49 +109,49 @@
      (trace/get-transaction-notes db (Long/parseLong id)))
    (GET "/view/:class/:id" req (trace/viewer-page req))
    (GET "/gene-by-name/:name" {params :params}
-     (get-gene-by-name (:name params)))
+     (get-gene-by-name db (:name params)))
    (GET "/gene-phenotypes/:id" {params :params}
-     (gene-phenotypes-widget (get-db uri) (:id params)))
+     (gene-phenotypes-widget db (:id params)))
    (GET "/gene-genetics/:id" {params :params}
-     (gene-genetics-widget (get-db uri) (:id params)))
+     (gene-genetics-widget db (:id params)))
 
    (context "/rest/widget/gene/:id" {params :params}
      (GET "/overview" []
-       (gene/overview (get-db uri) (:id params)))
+       (gene/overview db (:id params)))
      (GET "/history" []
-       (gene/history (get-db uri) (:id params)))
+       (gene/history db (:id params)))
      (GET "/phenotype" []
-       (gene/phenotypes (get-db uri) (:id params)))
+       (gene/phenotypes db (:id params)))
      (GET "/interactions" []
-       (get-interactions "gene" (get-db uri) (:id params)))
+       (get-interactions "gene" db (:id params)))
      (GET "/interaction_details" []
-       (get-interaction-details "gene" (get-db uri) (:id params)))
+       (get-interaction-details "gene" db (:id params)))
      (GET "/mapping_data" []
-       (gene/mapping-data (get-db uri) (:id params)))
+       (gene/mapping-data db (:id params)))
      (GET "/human_diseases" []
-       (gene/human-diseases (get-db uri) (:id params)))
+       (gene/human-diseases db (:id params)))
      (GET "/references" []
-       (get-references "gene" (get-db uri) (:id params)))
+       (get-references "gene" db (:id params)))
      (GET "/reagents" []
-       (gene/reagents (get-db uri) (:id params)))
+       (gene/reagents db (:id params)))
      (GET "/gene_ontology" []
-       (gene/gene-ontology (get-db uri) (:id params)))
+       (gene/gene-ontology db (:id params)))
      (GET "/expression" []
-       (gene/expression (get-db uri) (:id params)))
+       (gene/expression db (:id params)))
      (GET "/homology" []
-       (gene/homology (get-db uri) (:id params)))
+       (gene/homology db (:id params)))
      (GET "/seqeuences" []
-       (gene/sequences (get-db uri) (:id params)))
+       (gene/sequences db (:id params)))
      (GET "/feature" []
-       (gene/features (get-db uri) (:id params)))
+       (gene/features db (:id params)))
      (GET "/genetics" []
-       (gene/genetics (get-db uri) (:id params)))
+       (gene/genetics db (:id params)))
      (GET "/external_links" []
-       (gene/external-links (get-db uri) (:id params))))
+       (gene/external-links db (:id params))))
    (context "/features" [] feature-api)
    (GET "/prefix-search" {params :params}
      (trace/get-prefix-search
-      (get-db uri)
+      db
       (params "class")
       (params "prefix")))
    (GET "/schema" {db :db} (trace/get-schema db))
@@ -160,7 +159,7 @@
    (POST "/transact" req
      (friend/authorize #{::user}
                        (d/transact (d/connect uri) req)))
-   (context "/colonnade" req (colonnade (get-db uri)))
+   (context "/colonnade" req (colonnade db))
    (context "/curate" req (friend/authorize
                            #{::user}
                            (if (env :trace-enable-curation-forms)
@@ -169,34 +168,36 @@
    (route/files "/" {:root "resources/public"})))
 
 (defn api-routes []
-  (let [con (d/connect uri)]
-    (routes
-     (POST
-         "/api/query"
-         {params :params}
-       (if (env :trace-accept-rest-query)
-         (post-query-restful con params))))))
+  (routes
+   (POST
+     "/api/query"
+       {params :params}
+     (when (env :trace-accept-rest-query)
+       (println "Accepting REST queries")
+       (post-query-restful datomic-conn params)))))
 
-(defn wrap-db [handler]
-  (fn [request]
-    (let [con (d/connect uri)]
-      (handler (assoc request :con con :db (d/db con))))))
+(defn init
+  "Entry-point for ring web application."
+  []
+  (mount/start))
 
-(defn secure-app [request]
-  (let [authenticate (partial users/authenticate uri)
-        handler (-> (routes
-                     (wrap-routes (app-routes) wrap-anti-forgery-ssl)
-                     (api-routes))
-                    authenticate
-                    wrap-db
-                    wrap-edn-params-2
-                    wrap-keyword-params
-                    wrap-params
-                    wrap-multipart-params
-                    wrap-stacktrace
-                    wrap-session
-                    wrap-cookies)]
-    (handler request)))
+(defn handler [request]
+  (let [db (d/db datomic-conn)
+        request (assoc request :db db :con datomic-conn)
+        authenticate (users/make-authenticator db)
+        handle (->
+                (routes
+                 (wrap-routes (app-routes db) wrap-anti-forgery-ssl)
+                 (api-routes))
+                authenticate
+                wrap-edn-params-2
+                wrap-keyword-params
+                wrap-params
+                wrap-multipart-params
+                wrap-stacktrace
+                wrap-session
+                wrap-cookies)]
+    (handle request)))
 
 (defn- get-port [env-key & {:keys [default]
                             :or {default nil}}]
@@ -210,16 +211,14 @@
 
 (def trace-ssl-port (get-port :trace-ssl-port))
 
-;; (defonce server
-;;   (if trace-ssl-port
-;;     (run-jetty #'secure-app {:port trace-port
-;;                              :join? false
-;;                              :ssl-port trace-ssl-port
-;;                              :client-auth :want})
-;;     (run-jetty #'secure-app {:port trace-port
-;;                              :join? false})))
-
-;; (defn -main
-;;   [& args]
-;;   (.stop server)
-;;   (.start server))
+(defn -main
+  [& args]
+  (let [handler* handler
+        server (if trace-ssl-port
+                 (run-jetty #'handler {:port trace-port
+                                       :join? false
+                                       :ssl-port trace-ssl-port
+                                       :client-auth :want})
+                 (run-jetty #'handler {:port trace-port
+                                       :join? false}))]
+    server))

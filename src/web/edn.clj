@@ -1,5 +1,5 @@
 (ns web.edn
-  (:require clojure.edn
+  (:require [clojure.edn]
             [datomic.api :as d]))
 
 (def ^:private reader-map
@@ -35,7 +35,7 @@
       (let [edn-params (binding [*read-eval* false]
                          (-read-edn body))
             req* (assoc req
-                   :edn-params edn-params
-                   :params (merge (:params req) edn-params))]
+                        :edn-params edn-params
+                        :params (merge (:params req) edn-params))]
         (handler req*))
       (handler req))))

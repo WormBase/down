@@ -24,3 +24,8 @@ pom.xml
 pom.xml.asc
 release-archives/
 target/
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml

@@ -1,9 +1,10 @@
 (ns web.anti-forgery
   "Ring middleware to prevent CSRF attacks with an anti-forgery token."
-  (:use [hiccup core form])
   (:require [crypto.random :as random]
             [crypto.equality :as crypto]
-            [environ.core :refer (env)]))
+            [hiccup.core :refer (html)]
+            [hiccup.form :refer (hidden-field)]
+            [web.util :refer (allow-anonymous?)]))
 
 (def ^:dynamic
   ^{:doc "Binding that stores a anti-forgery token that must be included
@@ -35,7 +36,7 @@
   (let [user-token   (read-token request)
         stored-token (session-token request)]
     ;; XXX: Is this safe? passing back true if require-login is not set?
-    (or (->> :trace-require-login env read-string zero?)
+    (or (allow-anonymous?)
         (and user-token
              stored-token
              (crypto/eq? user-token stored-token)))))
@@ -72,8 +73,12 @@
     (binding [*anti-forgery-token* (session-token request)]
       (if (and (not (get-request? request))
                (not (ssl-auth-request? request))
-               (not (valid-request? request (:read-token options default-request-token))))
-        (:error-response options (access-denied "<h1>Invalid anti-forgery token</h1>"))
+               (not (valid-request?
+                     request
+                     (:read-token options default-request-token))))
+        (:error-response
+         options
+         (access-denied "<h1>Invalid anti-forgery token</h1>"))
         (if-let [response (handler request)]
           (assoc-session-token response request *anti-forgery-token*))))))
 

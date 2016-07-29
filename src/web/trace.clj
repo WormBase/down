@@ -1,16 +1,17 @@
 (ns web.trace
-  (:use hiccup.core
-        web.anti-forgery
-        clojure.walk
-        pseudoace.utils)
-  (:require [datomic.api :as d :refer (db history q touch entity)]
-            [clojure.string :as str]
-            [compojure.core :refer (defroutes GET POST context wrap-routes)]
-            [compojure.route :as route]
-            [compojure.handler :as handler]
-            [ring.util.response :refer [file-response]]
-            [cemerick.friend :as friend]
-            [environ.core :refer (env)]))
+  (:require
+   [cemerick.friend :as friend]
+   [clojure.string :as str]
+   [clojure.walk :refer (postwalk)]
+   [compojure.core :refer (defroutes GET POST context wrap-routes)]
+   [compojure.handler :as handler]
+   [compojure.route :as route]
+   [datomic.api :as d :refer (db)]
+   [environ.core :refer (env)]
+   [hiccup.core :refer (html)]
+   [pseudoace.utils :refer (conj-if)]
+   [ring.util.response :refer (file-response)]
+   [web.anti-forgery :refer (*anti-forgery-token*)]))
 
 ;;
 ;; Back-end for the TrACe tree-viewer/editor.  Current TrACe uses the "obj2" protocol.
@@ -20,37 +21,37 @@
 (declare touch-link)
 (declare obj2)
 
-(def 
+(def
   ^{:dynamic true
     :doc "If bound to a map of :class/id -> attributes, use those attributes
           as possible object labels."}
   *class-titles* nil)
 
-(defn class-titles-for-user 
+(defn class-titles-for-user
   "Return the default *class-titles* map for a user."
   [db username]
-  (if username 
-    (->> (q '[:find ?class-id ?attr-id
-              :in $ ?username
-              :where [?user :user/name ?username]
-                     [?t :wormbase.title/user ?user]
-                     [?t :wormbase.title/class ?class]
-                     [?t :wormbase.title/attribute ?attr]
-                     [?class :db/ident ?class-id]
-                     [?attr :db/ident ?attr-id]]
-            db username)
+  (if username
+    (->> (d/q '[:find ?class-id ?attr-id
+                :in $ ?username
+                :where [?user :user/name ?username]
+                       [?t :wormbase.title/user ?user]
+                       [?t :wormbase.title/class ?class]
+                       [?t :wormbase.title/attribute ?attr]
+                       [?class :db/ident ?class-id]
+                       [?attr :db/ident ?attr-id]]
+              db username)
          (into {}))))
 
-(defn- object-link 
+(defn- object-link
   "Create a lookup-ref or labelled lookup-ref to object `v` of class `class`."
   [class v]
   (let [ref [class (class v)]]
-    (or 
+    (or
      (some->> (get *class-titles* class)
               (get v)
               (conj ref))
      ref)))
-  
+
 
 (defn touch-link-ref [ke v]
   (cond
@@ -66,19 +67,17 @@
     (into {}
       (for [k     (keys ent)
             :let  [v (k ent)
-                   ke (entity db k)]]
+                   ke (d/entity db k)]]
         [k
          (if (= (:db/valueType ke) :db.type/ref)
            (if (= (:db/cardinality ke) :db.cardinality/one)
              (touch-link-ref ke v)
-             (into #{}
-               (for [i v]
-                 (touch-link-ref ke i))))
+             (set (for [i v] (touch-link-ref ke i))))
            v)]))))
 
 
 (defn obj2-attr [db maxcount exclude datoms]
-  (let [attr (entity db (:a (first datoms)))]
+  (let [attr (d/entity db (:a (first datoms)))]
     (if (not (or (exclude (:db/ident attr))
                  (= :importer/temp (:db/ident attr))))
       {:key   (:db/ident attr)
@@ -99,10 +98,10 @@
                    (:db/isComponent attr)
                    (obj2 db (:v d) maxcount)
                    (= (:db/valueType attr) :db.type/ref)
-                   (touch-link-ref attr (entity db (:v d)))
+                   (touch-link-ref attr (d/entity db (:v d)))
                    :default
                    (:v d))}))})))
-         
+
 
 (defn obj2
   ([db ent maxcount] (obj2 db ent maxcount #{}))
@@ -115,14 +114,13 @@
         (filter identity))))
 
 (defn- xref-component-parent [db ent obj-ref]
-  (let [[e a v t]   (first (d/datoms db :vaet ent))
-        attrent     (entity db a)
-        attr        (:db/ident attrent)
-        attr-ns    (namespace attr)
-        attr-name  (name attr)
-        revattr    (keyword attr-ns
-                            (str "_" attr-name))
-        ent         (entity db e)]
+  (let [[e a v t] (first (d/datoms db :vaet ent))
+        attrent (d/entity db a)
+        attr (:db/ident attrent)
+        attr-ns (namespace attr)
+        attr-name (name attr)
+        revattr (keyword attr-ns (str "_" attr-name))
+        ent (d/entity db e)]
     (cond
       (obj-ref ent)
       {:key     attr
@@ -137,7 +135,7 @@
 
       ;; if no parent, we'll return nil
       )))
-    
+
 
 (defn xref-obj2-attr [db ent xref maxcount]
   (let [attr       (:pace.xref/attribute xref)
@@ -163,13 +161,13 @@
             :val (if comp?
                    (conj-if (obj2 db val maxcount #{attr})
                             (xref-component-parent db val obj-ref))
-                   (object-link obj-ref (entity db val)))
+                   (object-link obj-ref (d/entity db val)))
            }))})))
 
 (defn xref-obj2
   "Make obj2-format records of all inbound attributes to `ent`."
   [db clid ent maxcount]
-  (for [xref (:pace/xref (entity db clid))
+  (for [xref (:pace/xref (d/entity db clid))
         :let [vm         (xref-obj2-attr db ent xref maxcount)]
         :when vm]
     vm))
@@ -177,7 +175,7 @@
 (defn find-txids [props]
   (mapcat
    (fn [{:keys [key values comp]}]
-     (mapcat 
+     (mapcat
       (fn [v]
         (let [txn [(:txn v)]]
           (if comp
@@ -188,8 +186,8 @@
 
 (defn get-raw-txns [ddb txids]
   (for [t txids
-        :let [te (as-> (entity ddb t) $
-                       (touch $)
+        :let [te (as-> (d/entity ddb t) $
+                       (d/touch $)
                        (into {} $)
                        (assoc $ :db/id t))]]
     (if-let [curator (:wormbase/curator te)]
@@ -199,23 +197,24 @@
       te)))
 
 (defn get-raw-obj2 [ddb class id max-out max-in txns?]
- (binding [*class-titles* (class-titles-for-user ddb (:username (friend/current-authentication)))]
-  (let [clid  (keyword class "id")
-        entid (->> [clid id]
-                   (entity ddb)
-                   (:db/id))]
-    (if entid
-      (let [props (concat (obj2 ddb entid max-out)
-                          (xref-obj2 ddb clid entid max-in))
-            txids (set (find-txids props))]
-        {:status 200
-         :headers {"Content-Type" "text/plain"}
-         :body (pr-str {:props  props
-                        :id     (str entid)
-                        :txns   (if txns?
-                                  (get-raw-txns ddb txids))})})
-      {:status 404
-       :body "Not found"}))))
+  (binding [*class-titles*
+            (class-titles-for-user ddb (:username (friend/current-authentication)))]
+    (let [clid  (keyword class "id")
+          entid (->> [clid id]
+                     (d/entity ddb)
+                     (:db/id))]
+      (if entid
+        (let [props (concat (obj2 ddb entid max-out)
+                            (xref-obj2 ddb clid entid max-in))
+              txids (set (find-txids props))]
+          {:status 200
+           :headers {"Content-Type" "text/plain"}
+           :body (pr-str {:props  props
+                          :id     (str entid)
+                          :txns   (if txns?
+                                    (get-raw-txns ddb txids))})})
+        {:status 404
+         :body "Not found"}))))
 
 (defn get-raw-attr2-out [ddb entid attr txns?]
   (let [prop (obj2-attr ddb nil (seq (d/datoms ddb :eavt entid attr)))
@@ -227,10 +226,10 @@
                     :txns (if txns? (get-raw-txns ddb txids))))}))
 
 (defn get-raw-attr2-in [ddb entid attr txns?]
-  (let [xref (entity ddb (q '[:find ?x .
-                              :in $ ?a
-                              :where [?x :pace.xref/attribute ?a]]
-                            ddb attr))
+  (let [xref (d/entity ddb (d/q '[:find ?x .
+                                  :in $ ?a
+                                  :where [?x :pace.xref/attribute ?a]]
+                              ddb attr))
         prop (xref-obj2-attr ddb entid attr nil)
         txids (set (find-txids [prop]))]
     {:status 200
@@ -238,7 +237,7 @@
      :body (pr-str (assoc
                      prop
                      :txns (if txns? (get-raw-txns ddb txids))))}))
-  
+
 
 (defn get-raw-attr2 [ddb entid attr-name txns?]
  (binding [*class-titles* (class-titles-for-user ddb (:username (friend/current-authentication)))]
@@ -251,27 +250,27 @@
 
 (defn get-raw-history2 [db entid attr]
   (let [hdb    (d/history db)
-        schema (entity db attr)
+        schema (d/entity db attr)
         valmap (cond
                  (:pace/obj-ref schema)
-                 (comp (:pace/obj-ref schema) (partial entity db))
+                 (comp (:pace/obj-ref schema) (partial d/entity db))
 
                  (:db/isComponent schema)
                  identity
 
                  (= (:db/valueType schema) :db.type/ref)
                  (fn [eid]
-                   (let [e (entity db eid)]
+                   (let [e (d/entity db eid)]
                      (if-let [ident (:db/ident e)]
                        (name ident)
                        eid)))
-                 
+
                  :default
                  identity)
         datoms (sort-by :tx (seq (d/datoms hdb :eavt entid attr)))]
     {:status 200
      :headers {"Content-Type" "text/plain"}
-     :body (pr-str {:datoms (map (fn [[e a v tx a]] 
+     :body (pr-str {:datoms (map (fn [[e a v tx a]]
                                    {:e e
                                     :a a
                                     :v (valmap v)
@@ -285,37 +284,37 @@
 (defn get-transaction-notes [db id]
   {:status 200
    :headers {"Content-Type" "text/plain"}
-   :body (q '[:find ?d .
-              :in $ ?tx
-              :where [?tx :db/doc ?d]]
-            db id)})
-            
+   :body (d/q '[:find ?d .
+                :in $ ?tx
+                :where [?tx :db/doc ?d]]
+              db id)})
+
 
 (defn get-raw-ent [ddb id]
   {:status 200
    :headers {"Content-Type" "application/edn"}
-   :body (pr-str (touch (entity ddb id)))})
+   :body (pr-str (d/touch (d/entity ddb id)))})
 
 (def cljs-symbol (re-pattern "^[:]?([^0-9/]*/)?([^0-9/][^/]*)$"))
 
 (defn get-schema-classes [db]
-  (->> (q '[:find ?cid
-            :where [?cid :pace/identifies-class _]]
-          db)
+  (->> (d/q '[:find ?cid
+              :where [?cid :pace/identifies-class _]]
+            db)
        (map (fn [[cid]]
-              (let [ent (into {} (touch (entity db cid)))]
+              (let [ent (into {} (d/touch (d/entity db cid)))]
                 (assoc ent :pace/xref
                   (for [x (:pace/xref ent)
-                        :let [x (touch x)]     
+                        :let [x (d/touch x)]
                         :when true #_(re-matches cljs-symbol (str (:pace.xref/attribute x)))]
                     x)))))))
 
 (defn get-schema-attributes [db]
-  (->> (q '[:find ?attr
-            :where [?attr :pace/tags _]]
-          db)
+  (->> (d/q '[:find ?attr
+              :where [?attr :pace/tags _]]
+            db)
        (map (fn [[attr]]
-              (touch (entity db attr))))))
+              (d/touch (d/entity db attr))))))
 
 (defn get-schema [ddb]
   {:status 200
@@ -341,7 +340,7 @@
        [:div.header-identity
         [:div {:style "display: inline-block"}
          [:img.banner {:src "/img/logo_wormbase_gradient_small.png"}]
-         (if-let [name (:wormbase/system-name (entity db :wormbase/system))]
+         (if-let [name (:wormbase/system-name (d/entity db :wormbase/system))]
            [:div.system-name name])]]
        [:div.header-main
         [:h1#page-title "TrACeView"]
@@ -362,11 +361,11 @@
          "trace_logged_in = null;")
        (str "trace_token = '" *anti-forgery-token* "';")
        "trace.core.init_trace();"]]]]))
-  
+
 
 (defn- id-report [db datoms]
   (for [d datoms
-        :let [i (:db/ident (entity db (.a d)))]
+        :let [i (:db/ident (d/entity db (.a d)))]
         :when (= (name i) "id")]
     (.v d)))
 
@@ -401,7 +400,7 @@
                                  (.startsWith s prefix))))]
   {:status 200
    :headers {"Content-Type" "text/plain"}  ; for now
-   :body (pr-str 
+   :body (pr-str
           {:count (count names)
            :names (take 10 names)})}))
 

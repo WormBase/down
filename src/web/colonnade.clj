@@ -1,29 +1,33 @@
 (ns web.colonnade
-  (:use hiccup.core
-        pseudoace.utils
-        web.anti-forgery)   ;; for *anti-forgery-token*
   (:require [datomic.api :as d :refer (history q touch entity)]
             [clojure.string :as str]
             [ring.adapter.jetty :refer (run-jetty)]
             [compojure.core :refer (defroutes GET POST routes)]
             [compojure.route :as route]
             [compojure.handler :as handler]
+            [hiccup.core :refer (html)]
             [clojure.edn :as edn]
             [clojure.data.csv :refer (write-csv)]
-            [pseudoace.acedump :as acedump]))
+            [pseudoace.acedump :as acedump]
+            [pseudoace.utils :refer (sort-by-cached)]
+            [web.anti-forgery :refer (*anti-forgery-token*)]))
 
 (defn- page [{:keys [db] :as req}]
   (html
    [:html
     [:head
-     [:link {:rel "stylesheet"
-             :href "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css"}]
-     [:link {:rel "stylesheet"
-             :href "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap-theme.min.css"}]
-     [:link {:rel "stylesheet"
-             :href "//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"}]
-     [:link {:rel "stylesheet"
-             :href "/css/trace.css"}]]
+     [:link
+      {:rel "stylesheet"
+       :href "//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css"}]
+     [:link
+      {:rel "stylesheet"
+       :href "//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap-theme.min.css"}]
+     [:link
+      {:rel "stylesheet"
+       :href "//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"}]
+     [:link
+      {:rel "stylesheet"
+       :href "/css/trace.css"}]]
     [:body
      [:div.root
       [:div.header
@@ -43,12 +47,8 @@
      [:script {:src "/js/main.js"
                :type "text/javascript"}]
      [:script {:type "text/javascript"}
-      (str "trace_token = '" *anti-forgery-token* "';")
+      (str "var trace_token = '" *anti-forgery-token* "';")
       "trace.colonnade.init_coll();"]]]))
-
-
-(defn- starts-with [^String s ^String p]
-  (.startsWith s p))
 
 (def ^:private prefix-num-re #"([A-Za-z_-]*)(\d+)")
 
@@ -90,15 +90,13 @@
        :headers {"Content-Type" "text/csv"
                  "Content-Disposition" "attachment; filename=colonnade.csv"}
        :body (with-out-str
-               (write-csv
-                *out*
-                results
-                :quote? (constantly true)))}
+               (write-csv *out* results :quote? (constantly true)))}
 
       "keyset"
-      (let [class (:pace/identifies-class (entity
-                                           db
-                                           (:attribute (get columns keyset-column))))]
+      (let [class (:pace/identifies-class
+                   (entity
+                    db
+                    (:attribute (get columns keyset-column))))]
         {:status 200
          :headers {"Content-Type" "text/plain"
                    "Content-Disposition" "attachment; filename=colonnade.ace"}

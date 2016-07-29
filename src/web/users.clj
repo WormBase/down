@@ -3,6 +3,7 @@
    [base64-clj.core :as base64]
    [cemerick.friend :as friend]
    [cemerick.friend.credentials :as creds]
+   [cemerick.friend.workflows :refer (make-auth)]
    [cheshire.core :as json :refer (parse-string)]
    [clojure.string :as str]
    [datomic.api :as d]
@@ -10,8 +11,7 @@
    [friend-oauth2.util :refer (format-config-uri)]
    [friend-oauth2.workflow :as oauth2]
    [web.curate.schema :refer (curation-schema curation-init curation-fns)]
-   [web.db :refer (get-db)]
-   ))
+   [web.util :refer (allow-anonymous?)]))
 
 (def schema
   [{:db/id          (d/tempid :db.part/db)
@@ -83,24 +83,24 @@
 (def uri-config
   {:authentication-uri {:url "https://accounts.google.com/o/oauth2/auth"
                         :query {:client_id (:client-id client-config)
-                               :response_type "code"
-                               :redirect_uri (format-config-uri client-config)
-                               :scope "email"}}
-
+                                :response_type "code"
+                                :redirect_uri (format-config-uri client-config)
+                                :scope "email"}}
    :access-token-uri {:url "https://accounts.google.com/o/oauth2/token"
                       :query {:client_id (:client-id client-config)
                               :client_secret (:client-secret client-config)
                               :grant_type "authorization_code"
                               :redirect_uri (format-config-uri client-config)}}})
 
-(defn- goog-credential-fn [uri token]
-  (if-let [u (d/entity (get-db uri) [:user/email (:id (:access-token token))])]
-    {:identity token
-     :email (:user/email u)
-     :wbperson (:person/id (:user/wbperson u))
-     :roles #{::user}}))
+(defn goog-credential-fn [{:keys [db token] :as creds}]
+  (println "GCF")
+  (if-let [user (d/entity db [:user/email (:id (:access-token token))])]
+    (make-auth {:identity token
+                :email (:user/email user)
+                :wbperson (:person/id (:user/wbperson user))
+                :roles #{::user}})))
 
-(defn- goog-token-parse [resp]
+(defn goog-token-parse [resp]
   (let [token     (parse-string (:body resp) true)
         id-token  (parse-string
                    (flex-decode
@@ -110,13 +110,25 @@
     {:access_token (:access_token token)
      :id (:email id-token)}))
 
-(defn authenticate [uri handler]
-  (let [allow-anon? (->> :trace-require-login env read-string zero?)]
-    (friend/authenticate
-     handler
-     {:allow-anon? allow-anon?
-      :workflows [(oauth2/workflow
-                   {:client-config client-config
-                    :uri-config uri-config
-                    :access-token-parsefn goog-token-parse
-                    :credential-fn (partial goog-credential-fn uri)})]})))
+(defn authorize-maybe [handler]
+  (if (allow-anonymous?)
+    handler
+    (friend/authorize #{::user} (handler))))
+
+(defn make-workflow [db client-config uri-config]
+  (oauth2/workflow
+   {:client-config client-config
+    :uri-config uri-config
+    :access-token-parsefn goog-token-parse
+    :credential-fn (partial goog-credential-fn db)}))
+
+(defn authenticate* [db]
+  (let [allow-anon? (allow-anonymous?)]
+    (println "Authenticating request")
+    #(friend/authenticate
+      %
+      {:allow-anon? allow-anon?
+       :workflows [(make-workflow db client-config uri-config)]})))
+
+(defn make-authenticator [db]
+  (authenticate* db))
