@@ -8,9 +8,6 @@
    [compojure "1.5.1"]
    [com.andrewmcveigh/cljs-time "0.4.0"]
    [com.cemerick/friend "0.2.3"]
-   ;; [com.datomic/datomic-free "0.9.5359" :exclusions [joda-time]]
-   [com.datomic/datomic-pro "0.9.5359"
-    :exclusions [joda-time]]
    [com.ninjudd/ring-async "0.3.4"]
    [environ "1.0.3"]
    [fogus/ring-edn "0.3.0"]
@@ -71,6 +68,10 @@
              :datomic-free {:dependencies [[com.datomic/datomic-free "0.9.5385"
                                             :exclusions [joda-time]]]
                             :exclusions [com.datomic/datomic-pro]}
+             :datomic-pro {:dependencies [[com.datomic/datomic-pro "0.9.5385"
+                                            :exclusions [joda-time]]]}
+             :ddb {:dependencies [[com.amazonaws/aws-java-sdk-dynamodb "1.11.6"
+                                    :exclusions [joda-time]]]}
              :dev {:dependencies [[acyclic/squiggly-clojure "0.1.6"]
                                   [ring/ring-devel "1.5.0"]]
                    :plugins [[cider/cider-nrepl "0.13.0"]
