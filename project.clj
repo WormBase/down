@@ -25,13 +25,8 @@
    [ring/ring-anti-forgery "1.0.1"]
    [ring/ring-jetty-adapter "1.5.0"]
    [secretary "1.2.3"]
-   [wormbase/pseudoace "0.4.10"]
-   ;; Required?
-   ;; [org.clojure/tools.cli "0.3.3"]
-   ;; [org.clojars.hozumi/clj-commons-exec "1.0.6" ]
-   ]
-
-  :description "WormBase curation tools"
+   [wormbase/pseudoace "0.4.10"]]
+  :description "WormBase datomic curation tools"
   :source-paths ["src"]
   :plugins [[lein-cljsbuild "1.1.3"]
             [lein-pprint "1.1.1"]
@@ -49,14 +44,13 @@
              ;; "-XX:-OmitStackTraceInFastThrow"
              ]
   :env {:trace-db "datomic:ddb://us-east-1/wormbase/WS254"
-        :trace-port "8130"
+        :trace-port "80"
         :trace-accept-rest-query "1"}
   :resource-paths ["resources"]
   :cljsbuild
   {:builds [{:id "dev"
              :source-paths ["src"]
-             :compiler {
-                        :optimizations :whitespace
+             :compiler {:optimizations :whitespace
                         :output-to "resources/public/js/main.js"
                         :output-dir "resources/public/js/out"
                         :source-map "resources/public/js/main.js.map"}}]}
