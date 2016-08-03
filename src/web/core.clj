@@ -33,7 +33,8 @@
    [web.ssl :as ssl]
    [web.trace :as trace]
    [web.users :as users]
-   [web.widgets :refer (gene-genetics-widget gene-phenotypes-widget)]))
+   [web.widgets :refer (gene-genetics-widget gene-phenotypes-widget)])
+  (:gen-class))
 
 (def uri (env :trace-db))
 
