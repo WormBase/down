@@ -13,6 +13,7 @@
    [fogus/ring-edn "0.3.0"]
    [friend-oauth2 "0.1.3"]
    [hiccup "1.0.5"]
+   [mount "0.1.10"]
    [org.apache.httpcomponents/httpclient "4.5.2"]
    [org.clojure/clojure "1.8.0"]
    [org.clojure/clojurescript "0.0-3308"]
