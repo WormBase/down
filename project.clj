@@ -9,7 +9,7 @@
    [com.andrewmcveigh/cljs-time "0.4.0"]
    [com.cemerick/friend "0.2.3"]
    [com.ninjudd/ring-async "0.3.4"]
-   [environ "1.0.3"]
+   [environ "1.1.0"]
    [fogus/ring-edn "0.3.0"]
    [friend-oauth2 "0.1.3"]
    [hiccup "1.0.5"]
