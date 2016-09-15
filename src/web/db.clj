@@ -4,14 +4,15 @@
    [environ.core :refer (env)]
    [mount.core :refer (defstate)]))
 
-(def uri (env :trace-db))
-
-(defn- new-datomic-connection [uri]
-  (d/connect uri))
+(defn- new-datomic-connection []
+  (d/connect (uri)))
 
 (defn- disconnect [conn]
   (d/release conn))
 
+(defn uri []
+  (env :trace-db))
+
 (defstate datomic-conn
-  :start (new-datomic-connection uri)
+  :start (new-datomic-connection)
   :stop (disconnect datomic-conn))

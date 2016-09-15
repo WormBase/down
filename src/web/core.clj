@@ -23,7 +23,7 @@
    [web.anti-forgery :refer (wrap-anti-forgery-ssl)]
    [web.colonnade :refer (colonnade post-query)]
    [web.curate.core :refer (curation-forms)]
-   [web.db :refer (datomic-conn)]
+   [web.db :refer (datomic-conn uri)]
    [web.edn :refer (wrap-edn-params-2)]
    [web.locatable-api :refer (feature-api)]
    [web.query :refer (post-query-restful)]
@@ -35,8 +35,6 @@
    [web.users :as users]
    [web.widgets :refer (gene-genetics-widget gene-phenotypes-widget)])
   (:gen-class))
-
-(def uri (env :trace-db))
 
 (def ^:private rules
   '[[[gene-name ?g ?n] [?g :gene/public-name ?n]]
@@ -159,7 +157,7 @@
    (GET "/rest/auth" [] "hello")
    (POST "/transact" req
      (friend/authorize #{::user}
-                       (d/transact (d/connect uri) req)))
+                       (d/transact (d/connect (uri)) req)))
    (context "/colonnade" req (colonnade db))
    (context "/curate" req (friend/authorize
                            #{::user}
