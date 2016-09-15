@@ -23,7 +23,7 @@
    [web.anti-forgery :refer (wrap-anti-forgery-ssl)]
    [web.colonnade :refer (colonnade post-query)]
    [web.curate.core :refer (curation-forms)]
-   [web.db :refer (datomic-conn uri)]
+   [web.db :refer (datomic-conn datomic-uri)]
    [web.edn :refer (wrap-edn-params-2)]
    [web.locatable-api :refer (feature-api)]
    [web.query :refer (post-query-restful)]

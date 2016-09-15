@@ -5,12 +5,12 @@
    [mount.core :refer (defstate)]))
 
 (defn- new-datomic-connection []
-  (d/connect (uri)))
+  (d/connect (datomic-uri)))
 
 (defn- disconnect [conn]
   (d/release conn))
 
-(defn uri []
+(defn datomic-uri []
   (env :trace-db))
 
 (defstate datomic-conn
