@@ -157,7 +157,7 @@
    (GET "/rest/auth" [] "hello")
    (POST "/transact" req
      (friend/authorize #{::user}
-                       (d/transact (d/connect (uri)) req)))
+                       (d/transact (d/connect (datomic-uri)) req)))
    (context "/colonnade" req (colonnade db))
    (context "/curate" req (friend/authorize
                            #{::user}
