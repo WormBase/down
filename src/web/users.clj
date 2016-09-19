@@ -93,7 +93,6 @@
                               :redirect_uri (format-config-uri client-config)}}})
 
 (defn goog-credential-fn [{:keys [db token] :as creds}]
-  (println "GCF")
   (if-let [user (d/entity db [:user/email (:id (:access-token token))])]
     (make-auth {:identity token
                 :email (:user/email user)
