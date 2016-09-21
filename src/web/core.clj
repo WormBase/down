@@ -28,7 +28,8 @@
    [web.locatable-api :refer (feature-api)]
    [web.query :refer (post-query-restful)]
    [web.rest.gene :as gene]
-   [web.rest.interactions :refer (get-interactions get-interaction-details)]
+   [web.rest.interactions :refer (get-interactions
+                                  get-interaction-details)]
    [web.rest.references :refer (get-references)]
    [web.ssl :as ssl]
    [web.trace :as trace]
@@ -38,10 +39,14 @@
 
 (def ^:private rules
   '[[[gene-name ?g ?n] [?g :gene/public-name ?n]]
-    [[gene-name ?g ?n] [?c :gene.cgc-name/text ?n] [?g :gene/cgc-name ?c]]
+    [[gene-name ?g ?n]
+     [?c :gene.cgc-name/text ?n]
+     [?g :gene/cgc-name ?c]]
     [[gene-name ?g ?n] [?g :gene/molecular-name ?n]]
     [[gene-name ?g ?n] [?g :gene/sequence-name ?n]]
-    [[gene-name ?g ?n] [?o :gene.other-name/text ?n] [?g :gene/other-name ?o]]])
+    [[gene-name ?g ?n]
+     [?o :gene.other-name/text ?n]
+     [?g :gene/other-name ?o]]])
 
 (defn get-gene-by-name [db name]
   (let [genes (d/q '[:find ?gid
@@ -159,11 +164,13 @@
      (friend/authorize #{::user}
                        (d/transact (d/connect (datomic-uri)) req)))
    (context "/colonnade" req (colonnade db))
-   (context "/curate" req (friend/authorize
-                           #{::user}
-                           (if (env :trace-enable-curation-forms)
-                             curation-forms
-                             (GET "/*" [] "Curation disabled on this server"))))
+   (context "/curate"
+       req
+     (friend/authorize
+      #{::user}
+      (if (env :trace-enable-curation-forms)
+        curation-forms
+        (GET "/*" [] "Curation disabled on this server"))))
    (route/files "/" {:root "resources/public"})))
 
 (defn api-routes []
