@@ -1,0 +1,28 @@
+{
+    "AWSEBDockerrunVersion": "2",
+    "containerDefinitions": [{
+	"name": "dct-app",
+	"image": "wormbase/datomic-curation-tools",
+	"environment": [{
+	    "name": "TRACE_ENABLE_CURATION_FORMS",
+	    "value": "0"
+	}, {
+	    "name": "TRACE_ACCEPT_REST_QUERY",
+	    "value": "0"
+	}],
+	"essential": true,
+	"memory": 4096
+    }, {
+	"name": "dct-http-proxy",
+	"image": "wormbase/nginx-jetty-proxy",
+	"essential": true,
+	"memory": 128,
+	"portMappings": [{
+	    "hostPort": 80,
+	    "containerPort": 80
+	}],
+	"links": [
+	    "dct-app"
+	]
+    }]
+}
