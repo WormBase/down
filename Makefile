@@ -1,12 +1,17 @@
 SHELL := /bin/sh
-NAME := wormbase/datomic-curation-tools
+APP_CONTAINER_NAME := wormbase/datomic-curation-tools
+PROXY_CONTAINER_NAME := ${APP_CONTAINER_NAME}_nginx-proxy
 VERSION ?= $(shell git describe --abbrev=0 --tags)
 EBX_CONFIG = .ebextensions/.config
 DB_URI ?= $(shell sed -rn 's|value:(.*)|\1|p' ${EBX_CONFIG} | tr -d " ")
 DEPLOY_JAR := docker/app.jar
 WB_ACC_NUM := 357210185381
-FQ_TAG := ${WB_ACC_NUM}.dkr.ecr.us-east-1.amazonaws.com/${NAME}:${VERSION}
-APP_CONTAINER_NAME := dct-app
+FQ_PREFIX := ${WB_ACC_NUM}.dkr.ecr.us-east-1.amazonaws.com
+APP_FQ_TAG := ${FQ_PREFIX}/${APP_CONTAINER_NAME}:${VERSION}
+PROXY_FQ_TAG := ${FQ_PREFIX}/${PROXY_CONTAINER_NAME}:${VERSION}
+APP_SHORT_NAME := dct-app
+APP_ECR_REPOSITORY := ${FQ_PREFIX}/${APP_CONTAINER_NAME}
+PROXY_ECR_REPOSITORY := ${FQ_PREFIX}/${PROXY_CONTAINER_NAME}
 
 define print-help
         $(if $(need-help),$(warning $1 -- $2))
@@ -20,13 +25,17 @@ help: ; @echo $(if $(need-help),,\
 ${DEPLOY_JAR}: $(call print-help,docker/app.jar, "Build the jar file")
 	@./scripts/build-appjar.sh ${DEPLOY_JAR}
 
-.PHONY: build-nginx-proxy-server
-build-nginx-proxy-server:
-	@docker build -t nginx-proxy ./docker-nginx-proxy
+.PHONY: ensure-ecr-repositories
+	@aws
+
+.PHONY: build-nginx-proxy
+build-nginx-proxy:
+	@docker build \
+	-t ${PROXY_CONTAINER_NAME}:${VERSION} ./docker-nginx-proxy
 
 .PHONY: build-app
 build-app: $(call print-help,build-app,"Build the application container")
-	@docker build -t ${NAME}:${VERSION} \
+	@docker build -t ${APP_CONTAINER_NAME}:${VERSION} \
 		--build-arg uberjar_path=app.jar \
 		--build-arg \
 			aws_secret_access_key=${AWS_SECRET_ACCESS_KEY} \
@@ -40,27 +49,30 @@ docker-ecr-login: $(call print-help,docker-ecr-login,"Login to ECR")
 
 .PHONY: build
 build: $(call print-help,build,"Build all docker containers") \
-	build-nginx-proxy-server build-app
+	build-nginx-proxy build-app
 
 .PHONY: docker-tag
 docker-tag: $(call print-help,docker-tag,\
 	     "Tag the image with current git revision \
 	      and ':latest' alias")
-	@docker tag ${NAME}:${VERSION} ${FQ_TAG}
-	@docker tag ${NAME}:${VERSION} \
-		    ${WB_ACC_NUM}.dkr.ecr.us-east-1.amazonaws.com/${NAME}
+	@docker tag ${APP_CONTAINER_NAME}:${VERSION} ${APP_FQ_TAG}
+	@docker tag ${APP_CONTAINER_NAME}:${VERSION} ${APP_ECR_REPOSITORY}
+	@docker tag ${PROXY_CONTAINER_NAME}:${VERSION} ${PROXY_FQ_TAG}
+	@docker tag ${PROXY_CONTAINER_NAME}:${VERSION} ${PROXY_ECR_REPOSITORY}
+
 
 .PHONY: docker-push-ecr
 docker-push-ecr: $(call print-help,docker-push-ecr,\
 	           "Push the image tagged with the current git revision\
 	 	    to ECR")
-	@docker push ${FQ_TAG}
+	@docker push ${APP_FQ_TAG}
+	@docker push ${PROXY_FQ_TAG}
 
 
 run-app: $(call print-help,run-app,\
 	  "Run the application in docker (locally).")
 	@docker run \
-		--name ${APP_CONTAINER_NAME} \
+		--name ${APP_SHORT_NAME} \
 		--publish-all=true \
 		--publish 3000:3000 \
 		--detach \
@@ -71,11 +83,11 @@ run-app: $(call print-help,run-app,\
 		-e TRACE_ACCEPT_REST_QUERY=1 \
 		-e TRACE_REQUIRE_LOGIN=0 \
 		-v /home/matt/docker-data:/tmp/docker-data \
-		 ${NAME}:${VERSION}
+		 ${APP_CONTAINER_NAME}:${VERSION}
 
 run-nginx:
 	@docker run \
-		--link ${APP_CONTAINER_NAME} \
+		--link ${APP_SHORT_NAME} \
 	        --name nginx-container \
 		--detach \
 		-v `pwd`/resources/public:/var/www/static:ro \
@@ -83,7 +95,7 @@ run-nginx:
 		-p 80:80 \
 		-e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACESS_KEY} \
 		-e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
-		nginx-proxy
+		${PROXY_CONTAINER_NAME}
 
 run: $(call print-help,run,"Run the application in docker (locally).") \
      run-app run-nginx

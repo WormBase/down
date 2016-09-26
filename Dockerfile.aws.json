@@ -2,7 +2,8 @@
     "AWSEBDockerrunVersion": "2",
     "containerDefinitions": [{
 	"name": "dct-app",
-	"image": "wormbase/datomic-curation-tools",
+
+	"image": "357210185381.dkr.ecr.us-east-1.amazonaws.com/wormbase/datomic-curation-tools",
 	"environment": [{
 	    "name": "TRACE_ENABLE_CURATION_FORMS",
 	    "value": "0"
@@ -14,7 +15,7 @@
 	"memory": 4096
     }, {
 	"name": "dct-http-proxy",
-	"image": "wormbase/nginx-jetty-proxy",
+	"image": "357210185381.dkr.ecr.us-east-1.amazonaws.com/wormbase/datomic-curation-tools_nginx-proxy",
 	"essential": true,
 	"memory": 128,
 	"portMappings": [{
