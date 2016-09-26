@@ -57,8 +57,7 @@
   :main web.core
   :aot [web.core]
   :ring {:init web.core/init
-         :handler web.core/handler
-         :nrepl {:start? true :port 8131}}
+         :handler web.core/handler}
   :dev-dependencies [[acyclic/squiggly-clojure "0.1.6"]
                      [ring/ring-devel "1.5.0"]]
   :profiles {:uberjar {:aot :all}
