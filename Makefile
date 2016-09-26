@@ -76,13 +76,10 @@ run-app: $(call print-help,run-app,\
 		--publish-all=true \
 		--publish 3000:3000 \
 		--detach \
-		-e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
-		-e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
 		-e TRACE_DB=${DB_URI} \
 		-e TRACE_PORT=3000 \
 		-e TRACE_ACCEPT_REST_QUERY=1 \
 		-e TRACE_REQUIRE_LOGIN=0 \
-		-v /home/matt/docker-data:/tmp/docker-data \
 		 ${APP_CONTAINER_NAME}:${VERSION}
 
 run-nginx:
