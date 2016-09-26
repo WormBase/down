@@ -5,6 +5,7 @@ EBX_CONFIG = .ebextensions/.config
 DB_URI ?= $(shell sed -rn 's|value:(.*)|\1|p' ${EBX_CONFIG} | tr -d " ")
 DEPLOY_JAR := docker/app.jar
 FQ_TAG := ${WB_ACC_NUM}.dkr.ecr.us-east-1.amazonaws.com/${NAME}:${VERSION}
+APP_CONTAINER_NAME := dct-app
 
 define print-help
         $(if $(need-help),$(warning $1 -- $2))
@@ -58,7 +59,7 @@ docker-push-ecr: $(call print-help,docker-push-ecr,\
 run-app: $(call print-help,run-app,\
 	  "Run the application in docker (locally).")
 	@docker run \
-		--name datomic-curation-tools \
+		--name ${APP_CONTAINER_NAME} \
 		--publish-all=true \
 		--publish 3000:3000 \
 		--detach \
@@ -73,7 +74,7 @@ run-app: $(call print-help,run-app,\
 
 run-nginx:
 	@docker run \
-		--link datomic-curation-tools \
+		--link ${APP_CONTAINER_NAME} \
 	        --name nginx-container \
 		--detach \
 		-v `pwd`/resources/public:/var/www/static:ro \
@@ -84,7 +85,7 @@ run-nginx:
 		nginx-proxy
 
 run: $(call print-help,run,"Run the application in docker (locally).") \
-     run-datomic-curation-tools run-nginx
+     run-app run-nginx
 
 
 clean: $(call print-help,clean,"Remove the locally built JAR file.")
