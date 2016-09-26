@@ -4,6 +4,7 @@ VERSION ?= $(shell git describe --abbrev=0 --tags)
 EBX_CONFIG = .ebextensions/.config
 DB_URI ?= $(shell sed -rn 's|value:(.*)|\1|p' ${EBX_CONFIG} | tr -d " ")
 DEPLOY_JAR := docker/app.jar
+WB_ACC_NUM := 357210185381
 FQ_TAG := ${WB_ACC_NUM}.dkr.ecr.us-east-1.amazonaws.com/${NAME}:${VERSION}
 APP_CONTAINER_NAME := dct-app
 
