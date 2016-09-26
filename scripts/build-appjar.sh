@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 lein_cmd_prefix="lein with-profile +datomic-pro,+ddb"
 artefact="$1"
