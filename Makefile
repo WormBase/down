@@ -54,8 +54,7 @@ build: $(call print-help,build,"Build all docker containers") \
 
 .PHONY: docker-tag
 docker-tag: $(call print-help,docker-tag,\
-	     "Tag the image with current git revision \
-	      and ':latest' alias")
+	     "Tag the images with the current git revision")
 	@docker tag ${APP_CONTAINER_NAME}:${VERSION} ${APP_FQ_TAG}
 	@docker tag ${APP_CONTAINER_NAME}:${VERSION} ${APP_ECR_REPOSITORY}
 	@docker tag ${PROXY_CONTAINER_NAME}:${VERSION} ${PROXY_FQ_TAG}
