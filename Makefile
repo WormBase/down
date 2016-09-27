@@ -68,19 +68,21 @@ docker-push-ecr: $(call print-help,docker-push-ecr,\
 	@docker push ${APP_FQ_TAG}
 	@docker push ${PROXY_FQ_TAG}
 
+.PHONY: run-app
 run-app: $(call print-help,run-app,\
 	  "Run the application in docker (locally).")
 	@docker run \
 		--name ${APP_SHORT_NAME} \
 		--publish 3000:3000 \
 		--detach \
-		-e AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}" \
-		-e AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}" \
-		-e TRACE_DB="${DB_URI}" \
+		-e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
+		-e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
+		-e TRACE_DB=${DB_URI} \
 		-e TRACE_ACCEPT_REST_QUERY="1" \
 		-e TRACE_REQUIRE_LOGIN="0" \
 		 ${APP_CONTAINER_NAME}:${VERSION}
 
+.PHONY: run-nginx-proxy
 run-nginx-proxy: $(call print-help,run-nginx-proxy,\
                    "Run the nginx-proxy in docker locally")
 	@docker run \
