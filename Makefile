@@ -62,8 +62,8 @@ docker-tag: $(call print-help,docker-tag,\
 
 .PHONY: docker-push-ecr
 docker-push-ecr: $(call print-help,docker-push-ecr,\
-	           "Push the image tagged with the current git revision\
-	 	    to ECR")
+			"Push the image tagged with the current git \
+			revision to ECR") docker-ecr-login
 	@docker push ${APP_FQ_TAG}
 	@docker push ${PROXY_FQ_TAG}
 
