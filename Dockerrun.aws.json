@@ -1,8 +1,13 @@
 {
     "AWSEBDockerrunVersion": 2,
+    "volumes": [{
+	"name": "nginx-proxy-conf",
+	"host": {
+	    "sourcePath": "/srv/www/static"
+	}
+    }],
     "containerDefinitions": [{
 	"name": "dct-app",
-
 	"image": "357210185381.dkr.ecr.us-east-1.amazonaws.com/wormbase/datomic-curation-tools",
 	"environment": [{
 	    "name": "TRACE_ENABLE_CURATION_FORMS",
@@ -12,7 +17,12 @@
 	    "value": "0"
 	}],
 	"essential": true,
-	"memory": 4096
+	"memory": 4096,
+	"mountPoints": [{
+	    "sourceVolume": "nginx-proxy-conf",
+	    "containerPath": "/etc/nginx/conf.d",
+	    "readOnly": true
+	}]
     }, {
 	"name": "dct-http-proxy",
 	"image": "357210185381.dkr.ecr.us-east-1.amazonaws.com/wormbase/datomic-curation-tools_nginx-proxy",

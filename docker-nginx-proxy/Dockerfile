@@ -1,5 +1,7 @@
 FROM nginx:alpine
-RUN rm -f /etc/nginx/sites-enabled/default
+
+COPY resources/public /var/www/static
+COPY docker-nginx-proxy/nginx.conf /etc/nginx/nginx.conf
 
 # forward request and error logs to docker log collector
 RUN ln -sf /dev/stdout /var/log/nginx/access.log && \

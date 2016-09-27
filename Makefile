@@ -31,7 +31,8 @@ ${DEPLOY_JAR}: $(call print-help,docker/app.jar, "Build the jar file")
 .PHONY: build-nginx-proxy
 build-nginx-proxy:
 	@docker build \
-	-t ${PROXY_CONTAINER_NAME}:${VERSION} ./docker-nginx-proxy
+		-f ./docker-nginx-proxy/Dockerfile \
+		-t ${PROXY_CONTAINER_NAME}:${VERSION} .
 
 .PHONY: build-app
 build-app: $(call print-help,build-app,"Build the application container")
@@ -46,7 +47,6 @@ build-app: $(call print-help,build-app,"Build the application container")
 docker-ecr-login: $(call print-help,docker-ecr-login,"Login to ECR")
 	@eval $(shell aws ecr get-login)
 
-
 .PHONY: build
 build: $(call print-help,build,"Build all docker containers") \
 	build-nginx-proxy build-app
@@ -60,7 +60,6 @@ docker-tag: $(call print-help,docker-tag,\
 	@docker tag ${PROXY_CONTAINER_NAME}:${VERSION} ${PROXY_FQ_TAG}
 	@docker tag ${PROXY_CONTAINER_NAME}:${VERSION} ${PROXY_ECR_REPOSITORY}
 
-
 .PHONY: docker-push-ecr
 docker-push-ecr: $(call print-help,docker-push-ecr,\
 	           "Push the image tagged with the current git revision\
@@ -68,34 +67,33 @@ docker-push-ecr: $(call print-help,docker-push-ecr,\
 	@docker push ${APP_FQ_TAG}
 	@docker push ${PROXY_FQ_TAG}
 
-
 run-app: $(call print-help,run-app,\
 	  "Run the application in docker (locally).")
 	@docker run \
 		--name ${APP_SHORT_NAME} \
-		--publish-all=true \
 		--publish 3000:3000 \
 		--detach \
-		-e TRACE_DB=${DB_URI} \
-		-e TRACE_PORT=3000 \
-		-e TRACE_ACCEPT_REST_QUERY=1 \
-		-e TRACE_REQUIRE_LOGIN=0 \
+		-e AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}" \
+		-e AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}" \
+		-e TRACE_DB="${DB_URI}" \
+		-e TRACE_ACCEPT_REST_QUERY="1" \
+		-e TRACE_REQUIRE_LOGIN="0" \
 		 ${APP_CONTAINER_NAME}:${VERSION}
 
-run-nginx:
+run-nginx-proxy: $(call print-help,run-nginx-proxy,\
+                   "Run the nginx-proxy in docker locally")
 	@docker run \
 		--link ${APP_SHORT_NAME} \
-	        --name nginx-container \
+	        --name nginx-proxy \
 		--detach \
-		-v `pwd`/resources/public:/var/www/static:ro \
-		-v `pwd`/docker-nginx-proxy/nginx.conf:/etc/nginx/nginx.conf:ro \
 		-p 80:80 \
-		-e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACESS_KEY} \
-		-e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
-		${PROXY_CONTAINER_NAME}
+		${PROXY_CONTAINER_NAME}:${VERSION}
 
 run: $(call print-help,run,"Run the application in docker (locally).") \
-     run-app run-nginx
+     run-app run-nginx-proxy
+
+
+
 
 
 clean: $(call print-help,clean,"Remove the locally built JAR file.")
