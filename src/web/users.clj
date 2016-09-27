@@ -127,7 +127,6 @@
 
 (defn authenticate* [db]
   (let [allow-anon? (allow-anonymous?)]
-    (println "Authenticating request")
     #(friend/authenticate
       %
       {:allow-anon? allow-anon?
