@@ -92,12 +92,10 @@ run-nginx-proxy: $(call print-help,run-nginx-proxy,\
 		-p 80:80 \
 		${PROXY_CONTAINER_NAME}:${VERSION}
 
+.PHONY: run
 run: $(call print-help,run,"Run the application in docker (locally).") \
      run-app run-nginx-proxy
 
-
-
-
-
+.PHONY: clean
 clean: $(call print-help,clean,"Remove the locally built JAR file.")
 	@rm -f ${DEPLOY_JAR}
