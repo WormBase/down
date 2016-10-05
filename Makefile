@@ -24,10 +24,7 @@ help: ; @echo $(if $(need-help),,\
 	Type \'$(MAKE)$(dash-f) help\' to get help)
 
 ${DEPLOY_JAR}: $(call print-help,docker/app.jar, "Build the jar file")
-	@./scripts/build-appjar.sh ${DEPLOY_JAR}
-
-.PHONY: ensure-ecr-repositories
-	@aws
+	@./scripts/build-appjar.sh prod ${DEPLOY_JAR}
 
 .PHONY: build-nginx-proxy
 build-nginx-proxy:
