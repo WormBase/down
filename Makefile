@@ -95,3 +95,5 @@ run: $(call print-help,run,"Run the application in docker (locally).") \
 .PHONY: clean
 clean: $(call print-help,clean,"Remove the locally built JAR file.")
 	@rm -f ${DEPLOY_JAR}
+	@find target -type f -delete
+	@find . -type f -name '*-init.clj' -delete
