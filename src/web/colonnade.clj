@@ -26,8 +26,7 @@
       {:rel "stylesheet"
        :href "//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"}]
      [:link
-      {:rel "stylesheet"
-       :href "/css/trace.css"}]]
+      {:rel "stylesheet" :href "/css/main.min.css"}]]
     [:body
      [:div.root
       [:div.header
@@ -42,10 +41,7 @@
        [:div#header-content]]
      [:div.container-fluid
       [:div#table-maker]]]
-     [:script {:src "/js/out/goog/base.js"
-               :type "text/javascript"}]
-     [:script {:src "/js/main.js"
-               :type "text/javascript"}]
+     [:script {:src "/js/main.min.js" :type "text/javascript"}]
      [:script {:type "text/javascript"}
       (str "var trace_token = '" *anti-forgery-token* "';")
       "trace.colonnade.init_coll();"]]]))
