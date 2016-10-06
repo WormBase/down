@@ -24,7 +24,7 @@ help: ; @echo $(if $(need-help),,\
 	Type \'$(MAKE)$(dash-f) help\' to get help)
 
 ${DEPLOY_JAR}: $(call print-help,docker/app.jar, "Build the jar file")
-	@./scripts/build-appjar.sh ${DEPLOY_JAR}
+	@./scripts/build-appjar.sh prod ${DEPLOY_JAR}
 
 .PHONY: build-nginx-proxy
 build-nginx-proxy:
@@ -95,3 +95,5 @@ run: $(call print-help,run,"Run the application in docker (locally).") \
 .PHONY: clean
 clean: $(call print-help,clean,"Remove the locally built JAR file.")
 	@rm -f ${DEPLOY_JAR}
+	@find target -type f -delete
+	@find . -type f -name '*-init.clj' -delete

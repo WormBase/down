@@ -326,14 +326,17 @@
   (html
    [:html
     [:head
-     [:link {:rel "stylesheet"
-             :href "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css"}]
-     [:link {:rel "stylesheet"
-             :href "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap-theme.min.css"}]
-     [:link {:rel "stylesheet"
-             :href "//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"}]
-     [:link {:rel "stylesheet"
-             :href "/css/trace.css"}]]
+     [:link
+      {:rel "stylesheet"
+       :href "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css"}]
+     [:link
+      {:rel "stylesheet"
+       :href "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap-theme.min.css"}]
+     [:link
+      {:rel "stylesheet"
+       :href "//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"}]
+     [:link
+      {:rel "stylesheet" :href "/css/main.min.css"}]]
     [:body
      [:div.root
       [:div.header
@@ -347,11 +350,7 @@
         [:div#header-content]]]
       [:div.container-fluid
        [:div#tree]]
-
-      [:script {:src "/js/out/goog/base.js"
-                :type "text/javascript"}]
-      [:script {:src "/js/main.js"
-                :type "text/javascript"}]
+      [:script {:type "text/javascript" :src "/js/main.min.js"}]
       [:script {:type "text/javascript"}
        (str "/* " (friend/current-authentication req) " */")
        (if-let [id (friend/identity req)]
@@ -361,7 +360,6 @@
          "trace_logged_in = null;")
        (str "trace_token = '" *anti-forgery-token* "';")
        "trace.core.init_trace();"]]]]))
-
 
 (defn- id-report [db datoms]
   (for [d datoms
