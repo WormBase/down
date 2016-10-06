@@ -1,5 +1,6 @@
 !Build/
 *.bak
+*~
 .build/
 .last_cover_stats
 .lein-*
@@ -11,8 +12,6 @@ Build.bat
 MANIFEST.bak
 META.yml
 MYMETA.yml
-Makefile
-Makefile.old
 _build/
 blib/
 cover_db/
@@ -24,8 +23,12 @@ pom.xml
 pom.xml.asc
 release-archives/
 target/
+resources/public/js/main.js*
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
+
+# Docker
+docker/app.jar

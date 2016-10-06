@@ -75,25 +75,28 @@
             s)]
     (base64/decode s)))
 
-(def client-config {:client-id      (env :trace-oauth2-client-id)
-                    :client-secret  (env :trace-oauth2-client-secret)
-                    :callback {:domain (or (env :trace-oauth2-redirect-domain)
-                                           "http://localhost:8130")
-                               :path "/oauth2callback"}})
+(def client-config
+  {:client-id      (env :trace-oauth2-client-id)
+   :client-secret  (env :trace-oauth2-client-secret)
+   :callback {:domain (or (env :trace-oauth2-redirect-domain)
+                          "http://localhost:8130")
+              :path "/oauth2callback"}})
+
 (def uri-config
-  {:authentication-uri {:url "https://accounts.google.com/o/oauth2/auth"
-                        :query {:client_id (:client-id client-config)
-                                :response_type "code"
-                                :redirect_uri (format-config-uri client-config)
-                                :scope "email"}}
-   :access-token-uri {:url "https://accounts.google.com/o/oauth2/token"
-                      :query {:client_id (:client-id client-config)
-                              :client_secret (:client-secret client-config)
-                              :grant_type "authorization_code"
-                              :redirect_uri (format-config-uri client-config)}}})
+  {:authentication-uri
+   {:url "https://accounts.google.com/o/oauth2/auth"
+    :query {:client_id (:client-id client-config)
+            :response_type "code"
+            :redirect_uri (format-config-uri client-config)
+            :scope "email"}}
+   :access-token-uri
+   {:url "https://accounts.google.com/o/oauth2/token"
+    :query {:client_id (:client-id client-config)
+            :client_secret (:client-secret client-config)
+            :grant_type "authorization_code"
+            :redirect_uri (format-config-uri client-config)}}})
 
 (defn goog-credential-fn [{:keys [db token] :as creds}]
-  (println "GCF")
   (if-let [user (d/entity db [:user/email (:id (:access-token token))])]
     (make-auth {:identity token
                 :email (:user/email user)
@@ -124,7 +127,6 @@
 
 (defn authenticate* [db]
   (let [allow-anon? (allow-anonymous?)]
-    (println "Authenticating request")
     #(friend/authenticate
       %
       {:allow-anon? allow-anon?

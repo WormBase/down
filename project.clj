@@ -9,7 +9,7 @@
    [com.andrewmcveigh/cljs-time "0.4.0"]
    [com.cemerick/friend "0.2.3"]
    [com.ninjudd/ring-async "0.3.4"]
-   [environ "1.0.3"]
+   [environ "1.1.0"]
    [fogus/ring-edn "0.3.0"]
    [friend-oauth2 "0.1.3"]
    [hiccup "1.0.5"]
@@ -57,8 +57,7 @@
   :main web.core
   :aot [web.core]
   :ring {:init web.core/init
-         :handler web.core/handler
-         :nrepl {:start? true :port 8131}}
+         :handler web.core/handler}
   :dev-dependencies [[acyclic/squiggly-clojure "0.1.6"]
                      [ring/ring-devel "1.5.0"]]
   :profiles {:uberjar {:aot :all}

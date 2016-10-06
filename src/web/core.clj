@@ -23,12 +23,13 @@
    [web.anti-forgery :refer (wrap-anti-forgery-ssl)]
    [web.colonnade :refer (colonnade post-query)]
    [web.curate.core :refer (curation-forms)]
-   [web.db :refer (datomic-conn)]
+   [web.db :refer (datomic-conn datomic-uri)]
    [web.edn :refer (wrap-edn-params-2)]
    [web.locatable-api :refer (feature-api)]
    [web.query :refer (post-query-restful)]
    [web.rest.gene :as gene]
-   [web.rest.interactions :refer (get-interactions get-interaction-details)]
+   [web.rest.interactions :refer (get-interactions
+                                  get-interaction-details)]
    [web.rest.references :refer (get-references)]
    [web.ssl :as ssl]
    [web.trace :as trace]
@@ -36,14 +37,16 @@
    [web.widgets :refer (gene-genetics-widget gene-phenotypes-widget)])
   (:gen-class))
 
-(def uri (env :trace-db))
-
 (def ^:private rules
   '[[[gene-name ?g ?n] [?g :gene/public-name ?n]]
-    [[gene-name ?g ?n] [?c :gene.cgc-name/text ?n] [?g :gene/cgc-name ?c]]
+    [[gene-name ?g ?n]
+     [?c :gene.cgc-name/text ?n]
+     [?g :gene/cgc-name ?c]]
     [[gene-name ?g ?n] [?g :gene/molecular-name ?n]]
     [[gene-name ?g ?n] [?g :gene/sequence-name ?n]]
-    [[gene-name ?g ?n] [?o :gene.other-name/text ?n] [?g :gene/other-name ?o]]])
+    [[gene-name ?g ?n]
+     [?o :gene.other-name/text ?n]
+     [?g :gene/other-name ?o]]])
 
 (defn get-gene-by-name [db name]
   (let [genes (d/q '[:find ?gid
@@ -159,13 +162,15 @@
    (GET "/rest/auth" [] "hello")
    (POST "/transact" req
      (friend/authorize #{::user}
-                       (d/transact (d/connect uri) req)))
+                       (d/transact (d/connect (datomic-uri)) req)))
    (context "/colonnade" req (colonnade db))
-   (context "/curate" req (friend/authorize
-                           #{::user}
-                           (if (env :trace-enable-curation-forms)
-                             curation-forms
-                             (GET "/*" [] "Curation disabled on this server"))))
+   (context "/curate"
+       req
+     (friend/authorize
+      #{::user}
+      (if (env :trace-enable-curation-forms)
+        curation-forms
+        (GET "/*" [] "Curation disabled on this server"))))
    (route/files "/" {:root "resources/public"})))
 
 (defn api-routes []
