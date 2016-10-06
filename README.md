@@ -113,8 +113,8 @@ If they are not, then create them with:
 
 ```bash
 
-aws ecr create-repository wormbase/datomic-curaiton-tools
-aws ecr create-repository wormbase/datomic-curaiton-tools_nginx-proxy
+aws ecr create-repository wormbase/datomic-curation-tools
+aws ecr create-repository wormbase/datomic-curation-tools_nginx-proxy
 ```
 
 ### Build the application artefact
