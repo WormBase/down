@@ -30,6 +30,7 @@
   :source-paths ["src"]
   :plugins [[lein-asset-minifier "0.3.0"]
             [lein-cljsbuild "1.1.3"]
+            [lein-environ "1.1.0"]
             [lein-pprint "1.1.1"]
             [lein-ring "0.9.7"]]
   :javac-options ["-target" "1.8" "-source" "1.8"]
@@ -96,12 +97,11 @@
                     :env {:trace-db "datomic:ddb-local://localhost:8000/"}
                     :ring {:init web.core/init
                            :handler web.core/handler
-                           :nrepl {:start? true :port 8131}}
-                    :resource-paths ["test/resources"]}]
+                           :nrepl {:start? true :port 8131}
+                           :resource-paths ["test/resources"]}}]
              :prod [:ddb
                     :datomic-pro
                     {:env {:trace-db "datomic:ddb://us-east-1/WS255/wormbase"
                            :trace-port "80"
                            :trace-require-login "0"
-                           :trace-accept-rest-query "1"}
-                     }]})
+                           :trace-accept-rest-query "1"}}]})
