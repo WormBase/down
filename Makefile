@@ -26,9 +26,6 @@ help: ; @echo $(if $(need-help),,\
 ${DEPLOY_JAR}: $(call print-help,docker/app.jar, "Build the jar file")
 	@./scripts/build-appjar.sh ${DEPLOY_JAR}
 
-.PHONY: ensure-ecr-repositories
-	@aws
-
 .PHONY: build-nginx-proxy
 build-nginx-proxy:
 	@docker build \
