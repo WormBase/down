@@ -28,11 +28,11 @@ following environment variables somewhere in your shell.  Values can
 be provided by an adminstrator of AWS WormBase account if you do not
 know them.
 
-    `AWS_DEFAULT_PROFILE`
-    `AWS_DEFAULT_REGION`
-    `AWS_ACCESS_KEY_ID`
-    `AWS_SECRET_ACCESS_KEY`
-    `AWS_EB_PROFILE`
+    AWS_DEFAULT_PROFILE
+    AWS_DEFAULT_REGION
+    AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY
+    AWS_EB_PROFILE
 
 ### Quick start
 
