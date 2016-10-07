@@ -162,7 +162,7 @@
                    (conj-if (obj2 db val maxcount #{attr})
                             (xref-component-parent db val obj-ref))
                    (object-link obj-ref (d/entity db val)))
-           }))})))
+            }))})))
 
 (defn xref-obj2
   "Make obj2-format records of all inbound attributes to `ent`."
@@ -187,9 +187,9 @@
 (defn get-raw-txns [ddb txids]
   (for [t txids
         :let [te (as-> (d/entity ddb t) $
-                       (d/touch $)
-                       (into {} $)
-                       (assoc $ :db/id t))]]
+                   (d/touch $)
+                   (into {} $)
+                   (assoc $ :db/id t))]]
     (if-let [curator (:wormbase/curator te)]
       (assoc te :wormbase/curator
              {:person/id            (:person/id curator)
@@ -219,9 +219,9 @@
 (defn get-raw-attr2-out [ddb entid attr txns?]
   (let [prop (obj2-attr ddb nil nil (seq (d/datoms ddb :eavt entid attr)))
         txids (set (find-txids [prop]))]
-   {:status 200
-    :headers {"Content-Type" "text/plain"}
-    :body (pr-str (assoc
+    {:status 200
+     :headers {"Content-Type" "text/plain"}
+     :body (pr-str (assoc
                     prop
                     :txns (if txns? (get-raw-txns ddb txids))))}))
 
@@ -229,24 +229,24 @@
   (let [xref (d/entity ddb (d/q '[:find ?x .
                                   :in $ ?a
                                   :where [?x :pace.xref/attribute ?a]]
-                              ddb attr))
+                                ddb attr))
         prop (xref-obj2-attr ddb entid attr nil)
         txids (set (find-txids [prop]))]
     {:status 200
      :headers {"Content-Type" "text/plain"}
      :body (pr-str (assoc
-                     prop
-                     :txns (if txns? (get-raw-txns ddb txids))))}))
+                    prop
+                    :txns (if txns? (get-raw-txns ddb txids))))}))
 
 
 (defn get-raw-attr2 [ddb entid attr-name txns?]
- (binding [*class-titles* (class-titles-for-user ddb (:username (friend/current-authentication)))]
-  (let [attr (keyword (.substring attr-name 1))]
-    (if (.startsWith (name attr) "_")
-      (get-raw-attr2-in ddb entid (keyword (namespace attr)
-                                            (.substring (name attr) 1))
-                        txns?)
-      (get-raw-attr2-out ddb entid attr txns?)))))
+  (binding [*class-titles* (class-titles-for-user ddb (:username (friend/current-authentication)))]
+    (let [attr (keyword (.substring attr-name 1))]
+      (if (.startsWith (name attr) "_")
+        (get-raw-attr2-in ddb entid (keyword (namespace attr)
+                                             (.substring (name attr) 1))
+                          txns?)
+        (get-raw-attr2-out ddb entid attr txns?)))))
 
 (defn get-raw-history2 [db entid attr]
   (let [hdb    (d/history db)
@@ -307,8 +307,8 @@
                  ent
                  :pace/xref
                  (for [x (:pace/xref ent)
-                       :let [x (d/touch x)]] 
-                      x)))))))
+                       :let [x (d/touch x)]]
+                   x)))))))
 
 (defn get-schema-attributes [db]
   (->> (d/q '[:find ?attr
