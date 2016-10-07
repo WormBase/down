@@ -74,7 +74,6 @@ run-app: $(call print-help,run-app,\
 		-e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
 		-e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
 		-e TRACE_DB=${DB_URI} \
-		-e TRACE_ACCEPT_REST_QUERY="1" \
 		-e TRACE_REQUIRE_LOGIN="0" \
 		 ${APP_CONTAINER_NAME}:${VERSION}
 
