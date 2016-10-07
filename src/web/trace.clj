@@ -217,7 +217,7 @@
          :body "Not found"}))))
 
 (defn get-raw-attr2-out [ddb entid attr txns?]
-  (let [prop (obj2-attr ddb nil (seq (d/datoms ddb :eavt entid attr)))
+  (let [prop (obj2-attr ddb nil nil (seq (d/datoms ddb :eavt entid attr)))
         txids (set (find-txids [prop]))]
    {:status 200
     :headers {"Content-Type" "text/plain"}
