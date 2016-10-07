@@ -25,12 +25,6 @@
    [web.curate.core :refer (curation-forms)]
    [web.db :refer (datomic-conn datomic-uri)]
    [web.edn :refer (wrap-edn-params-2)]
-   [web.locatable-api :refer (feature-api)]
-   [web.query :refer (post-query-restful)]
-   [web.rest.gene :as gene]
-   [web.rest.interactions :refer (get-interactions
-                                  get-interaction-details)]
-   [web.rest.references :refer (get-references)]
    [web.ssl :as ssl]
    [web.trace :as trace]
    [web.users :as users]
@@ -119,45 +113,6 @@
    (GET "/gene-genetics/:id" {params :params}
      (gene-genetics-widget db (:id params)))
 
-   (context "/rest/widget/gene/:id" {params :params}
-     (GET "/overview" []
-       (gene/overview db (:id params)))
-     (GET "/history" []
-       (gene/history db (:id params)))
-     (GET "/phenotype" []
-       (gene/phenotypes db (:id params)))
-     (GET "/interactions" []
-       (get-interactions "gene" db (:id params)))
-     (GET "/interaction_details" []
-       (get-interaction-details "gene" db (:id params)))
-     (GET "/mapping_data" []
-       (gene/mapping-data db (:id params)))
-     (GET "/human_diseases" []
-       (gene/human-diseases db (:id params)))
-     (GET "/references" []
-       (get-references "gene" db (:id params)))
-     (GET "/reagents" []
-       (gene/reagents db (:id params)))
-     (GET "/gene_ontology" []
-       (gene/gene-ontology db (:id params)))
-     (GET "/expression" []
-       (gene/expression db (:id params)))
-     (GET "/homology" []
-       (gene/homology db (:id params)))
-     (GET "/seqeuences" []
-       (gene/sequences db (:id params)))
-     (GET "/feature" []
-       (gene/features db (:id params)))
-     (GET "/genetics" []
-       (gene/genetics db (:id params)))
-     (GET "/external_links" []
-       (gene/external-links db (:id params))))
-   (context "/features" [] feature-api)
-   (GET "/prefix-search" {params :params}
-     (trace/get-prefix-search
-      db
-      (params "class")
-      (params "prefix")))
    (GET "/schema" {db :db} (trace/get-schema db))
    (GET "/rest/auth" [] "hello")
    (POST "/transact" req
@@ -173,15 +128,6 @@
         (GET "/*" [] "Curation disabled on this server"))))
    (route/files "/" {:root "resources/public"})))
 
-(defn api-routes []
-  (routes
-   (POST
-     "/api/query"
-       {params :params}
-     (when (env :trace-accept-rest-query)
-       (println "Accepting REST queries")
-       (post-query-restful datomic-conn params)))))
-
 (defn init
   "Entry-point for ring web application."
   []
@@ -192,9 +138,7 @@
         request (assoc request :db db :con datomic-conn)
         authenticate (users/make-authenticator db)
         handle (->
-                (routes
-                 (wrap-routes (app-routes db) wrap-anti-forgery-ssl)
-                 (api-routes))
+                (routes (wrap-routes (app-routes db) wrap-anti-forgery-ssl))
                 authenticate
                 wrap-edn-params-2
                 wrap-keyword-params
