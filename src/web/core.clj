@@ -42,19 +42,19 @@
      [?o :gene.other-name/text ?n]
      [?g :gene/other-name ?o]]])
 
-(defn get-gene-by-name [db name]
+(defn get-gene-by-name [db nam]
   (let [genes (d/q '[:find ?gid
                      :in $ % ?name
                      :where (gene-name ?g ?name)
                      [?g :gene/id ?gid]]
-                   db rules name)
+                   db rules nam)
         oldmems (d/q '[:find ?gcid
                        :in $ ?name
                        :where [?gc :gene-class/old-member ?name]
                               [?gc :gene-class/id ?gcid]]
-                     db name)]
+                     db nam)]
     (html
-     [:h1 "Matches for " name]
+     [:h1 "Matches for " nam]
      [:ul
       (for [[gid] genes]
         [:li

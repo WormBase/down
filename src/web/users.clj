@@ -54,9 +54,9 @@
    :db/cardinality  :db.cardinality/one
    :db.install/_attribute :db.part/db}])
 
-(defn add [name passwd]
+(defn add [username passwd]
   {:db/id               (d/tempid :db.part/user)
-   :user/name           name
+   :user/name           username
    :user/bcrypt-passwd  (creds/hash-bcrypt passwd)})
 
 (defn setup-schema

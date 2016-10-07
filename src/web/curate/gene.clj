@@ -41,15 +41,14 @@
    "ovolvulus"      "Onchocerca volvulus"})
 
 (defn species-menu
-  "Build hiccup for a species menu"
-  ([name] (species-menu nil))
-  ([name sel]
+  "Build a hiccup structure for a species menu."
+  ([elem-name] (species-menu nil))
+  ([elem-name sel]
     (let [sel (or sel "elegans")]
-     [:select {:name name}
+     [:select {:name elem-name}
       (for [s (keys (sort-by val species-longnames))]
         [:option {:value s
-                  :selected (if (= sel s)
-                              "yes")}
+                  :selected (if (= sel s) "yes")}
          (species-longnames s)])])))
 
 (def name-checks
@@ -94,15 +93,15 @@
     "Public_name" #"^Ovo-[a-z21]{3,4}-[1-9]\d*(\.\d+)?$|^OVOC\d+$"}})
 
 (defn validate-name
-  [name type species]
-  (if-let [expr (get-in name-checks [species type])]
-    (if-not (re-matches expr name)
-      (str "Name '" name "' does not validate for " species ":" type))
-    (str "Not allowed: " species ":" type)))
+  [nam typ species]
+  (if-let [expr (get-in name-checks [species typ])]
+    (if-not (re-matches expr nam)
+      (str "Name '" nam "' does not validate for " species ":" typ))
+    (str "Not allowed: " species ":" typ)))
 
 (defn lookup-name
-  [db type name]
-  (if-let [query (case type
+  [db typ candidate]
+  (if-let [query (case typ
                    "CGC"
                    '[:find [?g ...]
                      :in $ ?name
@@ -114,7 +113,7 @@
                      :in $ ?name
                      :where [?g :gene/sequence-name ?name]])]
     (->>
-     (d/q query db name)
+     (d/q query db candidate)
      (map (partial d/entity db))
      (seq))))
 
@@ -163,21 +162,21 @@
 ;; New gene
 ;;
 
-(defn do-new-gene [con remark species new-name type]
+(defn do-new-gene [con remark species new-name typ]
  (let [db (d/db con)]
   (if-let [err (or
-                (validate-name new-name type species)
-                (if-let [old (lookup-name db type new-name)]
+                (validate-name new-name typ species)
+                (if-let [old (lookup-name db typ new-name)]
                   (format "%s name '%s' already used for gene '%s'."
-                          type new-name (:gene/id (first old)))))]
+                          typ new-name (:gene/id (first old)))))]
     {:err [err]}
     (let [tid (d/tempid :db.part/user)
           tx  [[:wb/mint-identifier :gene/id [tid]]
                (vmap
                 :db/id tid
-                :gene/sequence-name (if (= type "Sequence")
+                :gene/sequence-name (if (= typ "Sequence")
                                       new-name)
-                :gene/cgc-name      (if (= type "CGC")
+                :gene/cgc-name      (if (= typ "CGC")
                                       {:gene.cgc-name/text new-name})
                 :gene/version       1
                 :gene/version-change
@@ -202,7 +201,7 @@
               ent (d/touch
                    (d/entity db (d/resolve-tempid db (:tempids txr) tid)))
               who (:wbperson (friend/current-authentication))
-              gc  (if (= type "CGC")
+              gc  (if (= typ "CGC")
                     (or (second (re-matches #"(\w{3,4})(?:[(]|-\d+)" new-name))
                         "-"))]
           {:done (:gene/id ent)})
@@ -348,13 +347,13 @@
                      :value (or reason "")}]]]]
          [:input {:type "submit"}]]]))))
 
-(defn- do-add-name [con id type name species papers people]
+(defn- do-add-name [con id typ nam species papers people]
   (let
     [db       (d/db con)
      cid      (first (lookup "Gene" db id))
      gene     (and cid (d/entity db [:gene/id cid]))
      old-name (if cid
-                (d/q (case type
+                (d/q (case typ
                        "Sequence"
                        '[:find ?name .
                          :in $ ?gid
@@ -373,15 +372,15 @@
      errs (those
            (if-not cid
              (str "Couldn't find " id))
-           #_(if (= type "CGC")
+           #_(if (= typ "CGC")
                (if-not (authorized? #{:user.role/cgc} friend/*identity*)
                  "You do not have permission to add CGC names."))
            (if-not (name-checks species)
              (str "Unknown species " species))
-           (if-not (#{"CGC" "Sequence" "Public_name"} type)
-             (str "Unknown type " type))
-           (if-let [existing (first (lookup "Gene" db name))]
-             (list name " already exists as " (link "Gene" existing)))
+           (if-not (#{"CGC" "Sequence" "Public_name"} typ)
+             (str "Unknown type " typ))
+           (if-let [existing (first (lookup "Gene" db nam))]
+             (list nam " already exists as " (link "Gene" existing)))
            (if-let [bad-people (seq
                                 (filter
                                  #(not (d/entity
@@ -393,7 +392,7 @@
                                             db
                                             [:paper/id %])) papers))]
              (str "Invalid paper id: " (str/join ", " bad-papers)))
-           (validate-name name type species))]
+           (validate-name nam type species))]
     (if errs
       {:err errs}
       (let [version (or (:gene/version gene) 1)
@@ -403,11 +402,11 @@
 
                  (vmap
                   :db/id [:gene/id cid]
-                  :gene/sequence-name (if (= type "Sequence") name)
-                  :gene/cgc-name (if (= type "CGC")
+                  :gene/sequence-name (if (= typ "Sequence") nam)
+                  :gene/cgc-name (if (= typ "CGC")
                                    (vmap
                                     :gene.cgc-name/text
-                                    name
+                                    nam
 
                                     :evidence/paper-evidence
                                     (seq
@@ -428,10 +427,10 @@
                    :gene.version-change/date (Date.)
 
                    :gene-history-action/sequence-name-change
-                   (if (= type "Sequence") name)
+                   (if (= typ "Sequence") nam)
 
                    :gene-history-action/cgc-name-change
-                   (if (= type "CGC") name)))
+                   (if (= typ "CGC") nam)))
 
                  (txn-meta)]]
         (try
@@ -443,30 +442,30 @@
              :canonical cid})
           (catch Exception e {:err [(.getMessage e)]}))))))
 
-(defn- multi-input-vals [vals]
+(defn- multi-input-vals [values]
   (cond
-    (string? vals)
-    (if (empty? vals) nil [vals])
+    (string? values)
+    (if (empty? values) nil [values])
 
     :default
-    (filterv seq vals)))
+    (filterv seq values)))
 
 (defn add-gene-name [{db :db
                       con :con
                       {:keys [id
-                              type
-                              name
+                              typ
+                              nam
                               species
                               paper
                               person]} :params}]
   (page db
    (let [paper  (multi-input-vals paper)
          person (multi-input-vals person)
-         result (if (and id name)
-                  (do-add-name con id type name species paper person))]
+         result (if (and id nam)
+                  (do-add-name con id typ nam species paper person))]
      (if (:done result)
        [:div.block
-        "Added " [:strong name] " as " type " name for "
+        "Added " [:strong nam] " as " typ " name for "
         (link "Gene" (:canonical result))]
        [:div.block
         [:form {:method "POST"}
@@ -483,8 +482,8 @@
            [:td
             [:select {:name "type"}
              (if (authorized? #{:user.role/cgc} friend/*identity*)
-               [:option {:selected (if (= type "CGC") "yes")} "CGC"])
-             [:option {:selected (if (= type "Sequence") "yes")}
+               [:option {:selected (if (= typ "CGC") "yes")} "CGC"])
+             [:option {:selected (if (= typ "Sequence") "yes")}
               "Sequence"]]]]
           [:tr
            [:th "Name to add:"]
@@ -492,7 +491,7 @@
                          :name "name"
                          :size 20
                          :maxlength 40
-                         :value (or name "")}]]]
+                         :value (or nam "")}]]]
           [:tr
            [:th "Species:"]
            [:td

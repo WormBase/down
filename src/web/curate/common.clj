@@ -12,8 +12,8 @@
 
 (defn lc
   "Convert `str` to all-lower-case."
-  [^String str]
-  (.toLowerCase str))
+  [^String string]
+  (.toLowerCase string))
 
 (def name-placeholders
   {"Gene"       "WBGene... or name"
@@ -23,11 +23,11 @@
 (defn ac-field
   "Return hiccup data corresponding to a namedb autocomplete field for
    names of domain `domain`."
-  ([name domain]
+  ([nam domain]
      (ac-field domain ""))
-  ([name domain value]
+  ([nam domain value]
      [:input {:type "text"
-              :name name
+              :name nam
               :class "autocomplete"
               :data-domain domain
               :size 20

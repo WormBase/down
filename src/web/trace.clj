@@ -43,37 +43,36 @@
          (into {}))))
 
 (defn- object-link
-  "Create a lookup-ref or labelled lookup-ref to object `v` of class `class`."
-  [class v]
-  (let [ref [class (class v)]]
-    (or
-     (some->> (get *class-titles* class)
-              (get v)
-              (conj ref))
-     ref)))
-
+  "Create a lookup-ref or labelled lookup-ref to object `v` of class `cls`."
+  [cls v]
+  (let [ref [cls (cls v)]]
+    (or (some->> (get *class-titles* cls)
+                 (get v)
+                 (conj ref))
+        ref)))
 
 (defn touch-link-ref [ke v]
   (cond
-   (:db/isComponent ke)  (touch-link v)
-   (:pace/obj-ref ke)    (object-link (:pace/obj-ref ke) v)
-   (:db/ident v)         (:db/ident v)
-   :default              (if-let [class (first (filter #(= (name %) "id") (keys v)))]
-                           (object-link class v)
-                           v)))
+    (:db/isComponent ke)  (touch-link v)
+    (:pace/obj-ref ke)    (object-link (:pace/obj-ref ke) v)
+    (:db/ident v)         (:db/ident v)
+    :default
+    (if-let [class (first (filter #(= (name %) "id") (keys v)))]
+      (object-link class v)
+      v)))
 
 (defn touch-link [ent]
   (let [db (d/entity-db ent)]
     (into {}
-      (for [k     (keys ent)
-            :let  [v (k ent)
-                   ke (d/entity db k)]]
-        [k
-         (if (= (:db/valueType ke) :db.type/ref)
-           (if (= (:db/cardinality ke) :db.cardinality/one)
-             (touch-link-ref ke v)
-             (set (for [i v] (touch-link-ref ke i))))
-           v)]))))
+          (for [k     (keys ent)
+                :let  [v (k ent)
+                       ke (d/entity db k)]]
+            [k
+             (if (= (:db/valueType ke) :db.type/ref)
+               (if (= (:db/cardinality ke) :db.cardinality/one)
+                 (touch-link-ref ke v)
+                 (set (for [i v] (touch-link-ref ke i))))
+               v)]))))
 
 
 (defn obj2-attr [db maxcount exclude datoms]
