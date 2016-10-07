@@ -12,4 +12,4 @@ ENV AWS_ACCESS_KEY_ID=$aws_access_key_id \
 
 EXPOSE 3000
 
-CMD ["java", "-server", "-jar", "/srv/app.jar"]
+CMD ["java", "-jar", "/srv/app.jar"]
