@@ -303,11 +303,12 @@
             db)
        (map (fn [[cid]]
               (let [ent (into {} (d/touch (d/entity db cid)))]
-                (assoc ent :pace/xref
-                  (for [x (:pace/xref ent)
-                        :let [x (d/touch x)]
-                        :when true #_(re-matches cljs-symbol (str (:pace.xref/attribute x)))]
-                    x)))))))
+                (assoc
+                 ent
+                 :pace/xref
+                 (for [x (:pace/xref ent)
+                       :let [x (d/touch x)]] 
+                      x)))))))
 
 (defn get-schema-attributes [db]
   (->> (d/q '[:find ?attr
