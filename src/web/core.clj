@@ -138,7 +138,8 @@
         request (assoc request :db db :con datomic-conn)
         authenticate (users/make-authenticator db)
         handle (->
-                (routes (wrap-routes (app-routes db) wrap-anti-forgery-ssl))
+                (routes
+                 (wrap-routes (app-routes db) wrap-anti-forgery-ssl))
                 authenticate
                 wrap-edn-params-2
                 wrap-keyword-params

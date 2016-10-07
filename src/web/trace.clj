@@ -196,10 +196,10 @@
               :person/standard-name (:person/standard-name curator)})
       te)))
 
-(defn get-raw-obj2 [ddb class id max-out max-in txns?]
+(defn get-raw-obj2 [ddb cls id max-out max-in txns?]
   (binding [*class-titles*
             (class-titles-for-user ddb (:username (friend/current-authentication)))]
-    (let [clid  (keyword class "id")
+    (let [clid  (keyword cls "id")
           entid (->> [clid id]
                      (d/entity ddb)
                      (:db/id))]
@@ -237,7 +237,6 @@
      :body (pr-str (assoc
                     prop
                     :txns (if txns? (get-raw-txns ddb txids))))}))
-
 
 (defn get-raw-attr2 [ddb entid attr-name txns?]
   (binding [*class-titles* (class-titles-for-user ddb (:username (friend/current-authentication)))]
@@ -392,8 +391,8 @@
     (catch Exception e {:status 500
                         :body (.getMessage e)})))
 
-(defn get-prefix-search [db class prefix]
-  (let [names (->> (d/seek-datoms db :avet (keyword class "id") prefix)
+(defn get-prefix-search [db cls prefix]
+  (let [names (->> (d/seek-datoms db :avet (keyword cls "id") prefix)
                    (map :v)
                    (take-while (fn [^String s]
                                  (.startsWith s prefix))))]
