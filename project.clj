@@ -6,7 +6,7 @@
    [clj-http "3.3.0"]
    [clj-time "0.12.0"]
    [compojure "1.5.1"]
-   [com.andrewmcveigh/cljs-time "0.5.0-alpha1"]
+   [com.andrewmcveigh/cljs-time "0.4.0"]
    [com.cemerick/friend "0.2.3"]
    [com.ninjudd/ring-async "0.3.4"]
    [environ "1.1.0"]

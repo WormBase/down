@@ -1,10 +1,10 @@
 (ns web.curate.common
-  (:use hiccup.core)
-  (:require [datomic.api :as d :refer (q db history touch entity)]
-            [clojure.string :as str]
-            [cemerick.friend :as friend :refer [authorized?]]
-            [ring.util.anti-forgery :refer [anti-forgery-field]]))
-
+  (:require
+   [datomic.api :as d]
+   [hiccup.core :refer (html)]
+   [clojure.string :as str]
+   [cemerick.friend :as friend :refer (authorized?)]
+   [ring.util.anti-forgery :refer (anti-forgery-field)]))
 (defmulti lookup (fn [class db id] class))
 
 (defmethod lookup :default [_ db id]
@@ -12,8 +12,8 @@
 
 (defn lc
   "Convert `str` to all-lower-case."
-  [^String str]
-  (.toLowerCase str))
+  [^String string]
+  (.toLowerCase string))
 
 (def name-placeholders
   {"Gene"       "WBGene... or name"
@@ -23,11 +23,11 @@
 (defn ac-field
   "Return hiccup data corresponding to a namedb autocomplete field for
    names of domain `domain`."
-  ([name domain]
+  ([nam domain]
      (ac-field domain ""))
-  ([name domain value]
+  ([nam domain value]
      [:input {:type "text"
-              :name name
+              :name nam
               :class "autocomplete"
               :data-domain domain
               :size 20
@@ -38,7 +38,7 @@
 
 (defn menu []
  (let [id friend/*identity*]
-   (list 
+   (list
     [:div.menu-header
      [:h3 "Curation tasks"]]
 
@@ -48,24 +48,24 @@
 
      [:p [:a {:href "/curate/patch"} "Patch DB"]]
      [:p [:a {:href "/curate/txns"} "Transaction log"]]
-     
+
      [:h4 "Gene"]
-     
+
      [:p [:a {:href "/curate/gene/query"} "Find gene"]]
-     
-     (if true #_(authorized? #{:user.role/edit} id)
-       [:p [:a {:href "/curate/gene/add-name"} "Add name"]])
-     
+
      (if (authorized? #{:user.role/edit} id)
-       [:p [:a {:href "/remove-gene-name"} "Remove name"]])    
-    
-     (if true #_(authorized? #{:user.role/edit} id)
+       [:p [:a {:href "/curate/gene/add-name"} "Add name"]])
+
+     (if (authorized? #{:user.role/edit} id)
+       [:p [:a {:href "/remove-gene-name"} "Remove name"]])
+
+     (if (authorized? #{:user.role/edit} id)
        [:p [:a {:href "/curate/gene/new"} "New gene"]])
 
-     (if true #_(authorized? #{:user.role/edit} id)
+     (if (authorized? #{:user.role/edit} id)
        [:p [:a {:href "/curate/gene/kill"} "Kill gene"]])
 
-     (if true #_(authorized? #{:user.role/edit} id)
+     (if (authorized? #{:user.role/edit} id)
        [:p [:a {:href "/curate/gene/merge"} "Merge gene"]])
 
      (if (authorized? #{:user.role/edit} id)
@@ -117,7 +117,7 @@
 
      (if (authorized? #{:user.role/edit} id)
        [:p [:a {:href "/feature-merge"} "Merge features"]])
-     
+
      ]
 
      )))
@@ -140,7 +140,7 @@
       [:div.header-identity
        [:div {:style "display: inline-block"}
         [:img.banner {:src "/img/logo_wormbase_gradient_small.png"}]
-        (if-let [name (:wormbase/system-name (entity db :wormbase/system))]
+        (if-let [name (:wormbase/system-name (d/entity db :wormbase/system))]
           [:div.system-name name])]]
       [:div.header-main
        [:h1#page-title "Curation"]
@@ -171,5 +171,3 @@
   [:span id
    [:a {:href (str "/curate/feature/query?lookup=" id)}
     [:i {:class "fa fa-external-link"}]]])
-
-

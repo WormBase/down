@@ -43,37 +43,36 @@
          (into {}))))
 
 (defn- object-link
-  "Create a lookup-ref or labelled lookup-ref to object `v` of class `class`."
-  [class v]
-  (let [ref [class (class v)]]
-    (or
-     (some->> (get *class-titles* class)
-              (get v)
-              (conj ref))
-     ref)))
-
+  "Create a lookup-ref or labelled lookup-ref to object `v` of class `cls`."
+  [cls v]
+  (let [ref [cls (cls v)]]
+    (or (some->> (get *class-titles* cls)
+                 (get v)
+                 (conj ref))
+        ref)))
 
 (defn touch-link-ref [ke v]
   (cond
-   (:db/isComponent ke)  (touch-link v)
-   (:pace/obj-ref ke)    (object-link (:pace/obj-ref ke) v)
-   (:db/ident v)         (:db/ident v)
-   :default              (if-let [class (first (filter #(= (name %) "id") (keys v)))]
-                           (object-link class v)
-                           v)))
+    (:db/isComponent ke)  (touch-link v)
+    (:pace/obj-ref ke)    (object-link (:pace/obj-ref ke) v)
+    (:db/ident v)         (:db/ident v)
+    :default
+    (if-let [class (first (filter #(= (name %) "id") (keys v)))]
+      (object-link class v)
+      v)))
 
 (defn touch-link [ent]
   (let [db (d/entity-db ent)]
     (into {}
-      (for [k     (keys ent)
-            :let  [v (k ent)
-                   ke (d/entity db k)]]
-        [k
-         (if (= (:db/valueType ke) :db.type/ref)
-           (if (= (:db/cardinality ke) :db.cardinality/one)
-             (touch-link-ref ke v)
-             (set (for [i v] (touch-link-ref ke i))))
-           v)]))))
+          (for [k     (keys ent)
+                :let  [v (k ent)
+                       ke (d/entity db k)]]
+            [k
+             (if (= (:db/valueType ke) :db.type/ref)
+               (if (= (:db/cardinality ke) :db.cardinality/one)
+                 (touch-link-ref ke v)
+                 (set (for [i v] (touch-link-ref ke i))))
+               v)]))))
 
 
 (defn obj2-attr [db maxcount exclude datoms]
@@ -162,7 +161,7 @@
                    (conj-if (obj2 db val maxcount #{attr})
                             (xref-component-parent db val obj-ref))
                    (object-link obj-ref (d/entity db val)))
-           }))})))
+            }))})))
 
 (defn xref-obj2
   "Make obj2-format records of all inbound attributes to `ent`."
@@ -187,19 +186,19 @@
 (defn get-raw-txns [ddb txids]
   (for [t txids
         :let [te (as-> (d/entity ddb t) $
-                       (d/touch $)
-                       (into {} $)
-                       (assoc $ :db/id t))]]
+                   (d/touch $)
+                   (into {} $)
+                   (assoc $ :db/id t))]]
     (if-let [curator (:wormbase/curator te)]
       (assoc te :wormbase/curator
              {:person/id            (:person/id curator)
               :person/standard-name (:person/standard-name curator)})
       te)))
 
-(defn get-raw-obj2 [ddb class id max-out max-in txns?]
+(defn get-raw-obj2 [ddb cls id max-out max-in txns?]
   (binding [*class-titles*
             (class-titles-for-user ddb (:username (friend/current-authentication)))]
-    (let [clid  (keyword class "id")
+    (let [clid  (keyword cls "id")
           entid (->> [clid id]
                      (d/entity ddb)
                      (:db/id))]
@@ -217,11 +216,11 @@
          :body "Not found"}))))
 
 (defn get-raw-attr2-out [ddb entid attr txns?]
-  (let [prop (obj2-attr ddb nil (seq (d/datoms ddb :eavt entid attr)))
+  (let [prop (obj2-attr ddb nil nil (seq (d/datoms ddb :eavt entid attr)))
         txids (set (find-txids [prop]))]
-   {:status 200
-    :headers {"Content-Type" "text/plain"}
-    :body (pr-str (assoc
+    {:status 200
+     :headers {"Content-Type" "text/plain"}
+     :body (pr-str (assoc
                     prop
                     :txns (if txns? (get-raw-txns ddb txids))))}))
 
@@ -229,24 +228,23 @@
   (let [xref (d/entity ddb (d/q '[:find ?x .
                                   :in $ ?a
                                   :where [?x :pace.xref/attribute ?a]]
-                              ddb attr))
+                                ddb attr))
         prop (xref-obj2-attr ddb entid attr nil)
         txids (set (find-txids [prop]))]
     {:status 200
      :headers {"Content-Type" "text/plain"}
      :body (pr-str (assoc
-                     prop
-                     :txns (if txns? (get-raw-txns ddb txids))))}))
-
+                    prop
+                    :txns (if txns? (get-raw-txns ddb txids))))}))
 
 (defn get-raw-attr2 [ddb entid attr-name txns?]
- (binding [*class-titles* (class-titles-for-user ddb (:username (friend/current-authentication)))]
-  (let [attr (keyword (.substring attr-name 1))]
-    (if (.startsWith (name attr) "_")
-      (get-raw-attr2-in ddb entid (keyword (namespace attr)
-                                            (.substring (name attr) 1))
-                        txns?)
-      (get-raw-attr2-out ddb entid attr txns?)))))
+  (binding [*class-titles* (class-titles-for-user ddb (:username (friend/current-authentication)))]
+    (let [attr (keyword (.substring attr-name 1))]
+      (if (.startsWith (name attr) "_")
+        (get-raw-attr2-in ddb entid (keyword (namespace attr)
+                                             (.substring (name attr) 1))
+                          txns?)
+        (get-raw-attr2-out ddb entid attr txns?)))))
 
 (defn get-raw-history2 [db entid attr]
   (let [hdb    (d/history db)
@@ -303,11 +301,12 @@
             db)
        (map (fn [[cid]]
               (let [ent (into {} (d/touch (d/entity db cid)))]
-                (assoc ent :pace/xref
-                  (for [x (:pace/xref ent)
-                        :let [x (d/touch x)]
-                        :when true #_(re-matches cljs-symbol (str (:pace.xref/attribute x)))]
-                    x)))))))
+                (assoc
+                 ent
+                 :pace/xref
+                 (for [x (:pace/xref ent)
+                       :let [x (d/touch x)]]
+                   x)))))))
 
 (defn get-schema-attributes [db]
   (->> (d/q '[:find ?attr
@@ -391,8 +390,8 @@
     (catch Exception e {:status 500
                         :body (.getMessage e)})))
 
-(defn get-prefix-search [db class prefix]
-  (let [names (->> (d/seek-datoms db :avet (keyword class "id") prefix)
+(defn get-prefix-search [db cls prefix]
+  (let [names (->> (d/seek-datoms db :avet (keyword cls "id") prefix)
                    (map :v)
                    (take-while (fn [^String s]
                                  (.startsWith s prefix))))]

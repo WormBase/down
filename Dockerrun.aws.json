@@ -15,9 +15,6 @@
 	}, {
 	    "name": "TRACE_REQUIRE_LOGIN",
 	    "value": "0"
-	}, {
-	    "name": "TRACE_ACCEPT_REST_QUERY",
-	    "value": "0"
 	}]
     }, {
 	"name": "dct-http-proxy",

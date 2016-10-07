@@ -74,7 +74,6 @@ run-app: $(call print-help,run-app,\
 		-e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
 		-e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
 		-e TRACE_DB=${DB_URI} \
-		-e TRACE_ACCEPT_REST_QUERY="1" \
 		-e TRACE_REQUIRE_LOGIN="0" \
 		 ${APP_CONTAINER_NAME}:${VERSION}
 
@@ -95,5 +94,5 @@ run: $(call print-help,run,"Run the application in docker (locally).") \
 .PHONY: clean
 clean: $(call print-help,clean,"Remove the locally built JAR file.")
 	@rm -f ${DEPLOY_JAR}
-	@find target -type f -delete
+	@if [ -d target ]; then find target -type f -delete; fi
 	@find . -type f -name '*-init.clj' -delete

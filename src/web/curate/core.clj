@@ -23,8 +23,10 @@
           db)
        (into {})))
 
-(defn- entity-lur-datoms [db id-attrs eid]
-  "Return a lookup ref for `ent`, if it has a :class/id property.  Doesn't call `entity`, so can be used on history dbs."
+(defn- entity-lur-datoms
+  "Return a lookup ref for `ent`, if it has a :class/id property.
+  Doesn't call `entity`, so can be used on history dbs."
+  [db id-attrs eid]
   (last
    (for [[e a v t added?] (d/datoms db :eavt eid)
          :let [a (id-attrs a)]
@@ -56,7 +58,7 @@
     {:success true
      :db-after (:db-after txr)
      :entities (touched-entities (:db-after txr) (:tx-data txr))}))
-       
+
 
 (def ^:private reader-map
   {'db/id (fn [[part n]] (d/tempid part n))})
@@ -101,10 +103,10 @@
                    (case format
                      "ace"
                      (do-ace-patch con patch-rdr note)
-                     
+
                      "edn"
                      (do-edn-patch con patch-rdr note)
-                     
+
                      ;;default
                      (throw-exc "Bad format " format)))]
       (page db
@@ -227,7 +229,7 @@
                                             :db/doc (str "Revert transaction " t)}))]
             (page db
               [:h3 "Transaction " t " was undone!"]))
-          (let [test (d/with db reverse)]                
+          (let [test (d/with db reverse)]
             (page db
               [:form {:method "POST"}
                (anti-forgery-field)
