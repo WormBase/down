@@ -114,7 +114,6 @@
      (gene-genetics-widget db (:id params)))
 
    (GET "/schema" {db :db} (trace/get-schema db))
-   (GET "/rest/auth" [] "hello")
    (POST "/transact" req
      (friend/authorize #{::user}
                        (d/transact (d/connect (datomic-uri)) req)))
