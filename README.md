@@ -1,46 +1,30 @@
-# Datomic Curation Tools
+# down-tools
 
-A set of tools for use with the WormBase Datomic database.
+A set of tools for exploring the WormBase Datomic database.
 
-## Clojure Script Web Application(s) ##
+## Clojure Script Web Application(s)
 
 Web applications which use the [pseduoace](https://github.com/WormBase/pseudoace)
-representation of the [Wormbase database migration](https://github.com/WormBase/db-migration)
+representation of the [Wormbase database](https://github.com/WormBase/db-migration)
 
-Application are named:
+This repository comprises of two conceptually separate applications:
 
-* trace: Querying and viewing of the objects in the migrated database
-   using a "Table Maker" style interface.
+* trace
+  A view of the raw data in the database.
+  Each object has it's own uri, e.g: `/view/WBGene00000001`
 
-* colonnnade: Editing objects in the migrated database (links to
-   trace)
-
-
-## Dependencies ##
-
-* Datomic
-* pseudoace
+* colonnade
+  A tool for querying the database. Functionality loosely resembles
+  that of [BioMart][1] or "Table Maker".
+  By default, links to `trace` views of the search results.  Results
+  can be exported in CSV, ACeDB (with or without timestamps) and ACeDB
+  "KeySets".
 
 ## Environment setup
 
-It is assumed you have already configured the `aws` cli, and set the
-following environment variables somewhere in your shell.  Values can
-be provided by an adminstrator of AWS WormBase account if you do not
-know them.
-
-    AWS_DEFAULT_PROFILE
-    AWS_DEFAULT_REGION
-    AWS_ACCESS_KEY_ID
-    AWS_SECRET_ACCESS_KEY
-    AWS_EB_PROFILE
+Ensure to configure [AWS credentials][2].
 
 ### Quick start
-
-If you already have leiningen installed and are used to running
-clojure projects, then the following command chain will start an
-instance of this application (locally) for development, pointing at
-the production (read-only) datomic database:
-
 
 ```bash
 lein cljsbuild once prod dev && \
@@ -53,6 +37,7 @@ To view in a web browser:
 ```bash
 python -m webbrowser http://localhost:3000/colonnade/
 ```
+
 In the examples below, please use `dev` or `prod` for the value of
 `TARGET_PLATFORM`.
 
@@ -95,8 +80,8 @@ In the examples below, please use `dev` or `prod` for the value of
 
 Ensure the following two repositories are created in the [ECR][Elastic Container Registry]:
 
-  * wormbase/datomic-curaiton-tools
-  * wormbase/datomic-curaiton-tools_nginx-proxy
+  * wormbase/down
+  * wormbase/down_nginx-proxy
 
 ```bash
 aws ecr describe-repositories
@@ -106,8 +91,8 @@ If they are not, then create them with:
 
 ```bash
 
-aws ecr create-repository wormbase/datomic-curation-tools
-aws ecr create-repository wormbase/datomic-curation-tools_nginx-proxy
+aws ecr create-repository wormbase/down
+aws ecr create-repository wormbase/down_nginx-proxy
 ```
 
 ### Build the application artefact
@@ -163,3 +148,6 @@ The Makefile obtains the datomic URI from the file:
 
 Change the URI in the file `.ebextensions/.config` - this is the single
 location the URI should be defined within the project.
+
+[1]: http://parasite.wormbase.org/biomart/
+[2]: https://github.com/WormBase/wormbase-architecture/wiki/AWS-Credentials

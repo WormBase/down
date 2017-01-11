@@ -4,7 +4,10 @@ PROXY_CONTAINER_NAME := ${APP_CONTAINER_NAME}_nginx-proxy
 VERSION ?= $(shell git describe --abbrev=0 --tags)
 EBX_CONFIG = .ebextensions/.config
 DB_URI ?= $(shell sed -rn 's|value:\s+(datomic.*)|\1|p' ${EBX_CONFIG} | \
-            tr -d " ")
+	          tr -d " ")
+WS_VERSION ?= $(shell echo ${DB_URI} | \
+                      sed -rn 's|datomic.*(WS\d*)|\1|p' | \
+                tr -d " ")
 DEPLOY_JAR := docker/app.jar
 WB_ACC_NUM := 357210185381
 FQ_PREFIX := ${WB_ACC_NUM}.dkr.ecr.us-east-1.amazonaws.com
@@ -25,6 +28,10 @@ help: ; @echo $(if $(need-help),,\
 
 ${DEPLOY_JAR}: $(call print-help,docker/app.jar, "Build the jar file")
 	@./scripts/build-appjar.sh prod ${DEPLOY_JAR}
+
+.PHONY: print-ws-version
+print-ws-version:
+	@echo ${WS_VERSION}
 
 .PHONY: build-nginx-proxy
 build-nginx-proxy:
@@ -88,8 +95,24 @@ run-nginx-proxy: $(call print-help,run-nginx-proxy,\
 		${PROXY_CONTAINER_NAME}:${VERSION}
 
 .PHONY: run
-run: $(call print-help,run,"Run the application in docker (locally).") \
+run: $(call print-help,run, \
+       "Run the composite (nginx and jetty contained) docker application locally.") \
      run-app run-nginx-proxy
+
+
+.PHONY: eb-create
+eb-create: $(call print-help,eb-create,\
+             "Create an ElasticBeanStalk environment using \
+              the Docker platform.")
+	@eb create datomic-curation-tools-${WS_VERSION} \
+               --region=us-east-1 \
+               --tags="CreatedBy=${AWS_EB_PROFILE},Role=WebService" \
+               --instance-type=m3.xlarge \
+               --cname="datomic-curation-tools=${WS_VERSION}" \
+               --vpc.id="vpc-8e0087e9" \
+               --vpc.ec2subnets="subnet-a33a2bd5" \
+               --vpc.securitygroups="sg-2c332257" \
+               --single
 
 .PHONY: clean
 clean: $(call print-help,clean,"Remove the locally built JAR file.")
