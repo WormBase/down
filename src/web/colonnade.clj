@@ -24,7 +24,7 @@
        :href "//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap-theme.min.css"}]
      [:link
       {:rel "stylesheet"
-       :href "//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"}]
+       :href"//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"}]
      [:link
       {:rel "stylesheet" :href "/css/main.min.css"}]]
     [:body
@@ -33,11 +33,13 @@
        [:div.header-identity
         [:div {:style "display: inline-block"}
          [:img.banner {:src "/img/logo_wormbase_gradient_small.png"}]
-         (if-let [name (:wormbase/system-name (entity db :wormbase/system))]
+         (if-let [name (:wormbase/system-name
+                        (entity db :wormbase/system))]
            [:div.system-name name])]]
        [:div.header-main
         [:h1#page-title "Colonnade"]
-        [:img.banner {:src "/img/kazannevsky.jpg" :width 130 :style "float: right"}]]
+        [:img.banner
+         {:src "/img/kazannevsky.jpg" :width 130 :style "float: right"}]]
        [:div#header-content]]
      [:div.container-fluid
       [:div#table-maker]]]
@@ -56,88 +58,91 @@
              (str px (subs "000000000000" 0 (- 12 (count nx))) nx)))
       x))
 
+(defn- query-response
+  [& {:keys [body status content-type filename]
+      :or {status 200
+           filename nil
+           content-type "text/plain"}}]
+  (let [headers (merge
+                 {"Content-Type" content-type}
+                 (if (comp (not nil?) filename)
+                   {"Content-Disposition"
+                    (str "attachment; filename=" filename)}
+                   ))]
+        {:status status
+         :headers headers
+         :body body}))
 
-(defn post-query [con db {:keys [columns query rules args drop-rows max-rows
-                                 timeout log format keyset-column]}]
-  (let [query (if (string? query)
-                (edn/read-string query)
-                query)
-        rules (if (string? rules)
-                (edn/read-string rules)
-                rules)
-        args  (if (string? args)
-                (edn/read-string args)
-                args)
-        columns (if (string? columns)
-                  (edn/read-string columns))
+(defn- ace-download
+  [db columns keyset-column results & {:keys [include-timestamps filename]
+                                       :or {filename "colonnade.ace"}}]
+  (binding [acedump/*timestamps* include-timestamps
+            acedump/*xrefs*      true]
+    (let [clid (:attribute (get columns keyset-column))]
+      (query-response
+       :filename filename
+       :body (with-out-str
+               (doseq [[id] results]
+                 (acedump/dump-object
+                  (acedump/ace-object db [clid id]))))))))
+
+(defn- read-as-edn
+  [s]
+  (if (string? s)
+    (edn/read-string s)
+    s))
+
+(defn post-query
+  [con db {:keys [columns query rules args drop-rows max-rows
+                  timeout log format keyset-column]
+           :or {timeout 5000}}]
+  (let [query (read-as-edn query)
+        rules (read-as-edn rules)
+        args  (read-as-edn args)
+        columns (read-as-edn columns)
         args (if (seq rules)
                (cons rules args)
                args)
         args (if log
                (cons (d/log con) args)
                args)
-        results (d/query
-                 {:query query
-                  :args (cons db args)
-                  :timeout (or timeout 5000)})]
+        results (d/query {:query query
+                          :args (cons db args)
+                          :timeout timeout})
+        download-ace (partial ace-download
+                              db columns keyset-column results)]
     (case format
       "csv"
-      {:status 200
-       :headers {"Content-Type" "text/csv"
-                 "Content-Disposition" "attachment; filename=colonnade.csv"}
+      (query-response
        :body (with-out-str
-               (write-csv *out* results :quote? (constantly true)))}
-
+               (write-csv *out* results :quote? (constantly true)))
+       :filename "colonnade.csv")
       "keyset"
       (let [class (:pace/identifies-class
                    (entity
                     db
                     (:attribute (get columns keyset-column))))]
-        {:status 200
-         :headers {"Content-Type" "text/plain"
-                   "Content-Disposition" "attachment; filename=colonnade.ace"}
+        (query-response
+         :filename "colonnade-keyset.txt"
          :body (with-out-str
                  (doseq [[o] results]
-                   (println class ":" (str \" o \"))))})
-
+                   (println class ":" (str \" o \"))))))
       "ace"
-      (binding [acedump/*timestamps* false
-                acedump/*xrefs*      true]
-        (let [clid (:attribute (get columns keyset-column))]
-          {:status 200
-           :headers {"Content-Type" "text/plain"
-                     "Content-Disposition" "attachment; filename=colonnade.ace"}
-           :body (with-out-str
-                   (doseq [[id] results]
-                     (acedump/dump-object (acedump/ace-object db [clid id]))))}))
-
-
+      (download-ace :include-timestamps false)
       "acets"
-      (binding [acedump/*timestamps* true
-                acedump/*xrefs*      true]
-        (let [clid (:attribute (get columns keyset-column))]
-          {:status 200
-           :headers {"Content-Type" "text/plain"
-                     "Content-Disposition" "attachment; filename=colonnade.ace"}
-           :body (with-out-str
-                   (doseq [[id] results]
-                     (acedump/dump-object (acedump/ace-object db [clid id]))))}))
-
-
-
+      (download-ace :include-timestamps true)
       ;; default
-      {:status 200
-       :headers {"Content-Type" "text/plain"}
-       :body (pr-str {:query query
-                      :results (cond->> (sort-by-cached
-                                         (comp prefix-num-comparator first) results)
-                                 drop-rows (drop drop-rows)
-                                 max-rows (take max-rows))
-                      :drop-rows drop-rows
-                      :max-rows max-rows
-                      :count (count results)})})))
-
-
+      (query-response
+       :body (pr-str
+              {:query query
+               :results (cond->> (sort-by-cached
+                                  (comp prefix-num-comparator first)
+                                  results)
+                          drop-rows (drop drop-rows)
+                          max-rows (take max-rows))
+               :drop-rows drop-rows
+               :max-rows max-rows
+               :count (count results)})))))
 
 (defn colonnade [db]
   (routes
