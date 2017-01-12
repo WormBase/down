@@ -1,10 +1,10 @@
-(defproject wormbase/trace "0.1-SNAPSHOT"
+(defproject wormbase/down "0.1-SNAPSHOT"
   :dependencies
   [[base64-clj "0.1.1"]
    [bk/ring-gzip "0.1.1"]
    [cheshire "5.6.3"]
    [clj-http "3.3.0"]
-   [clj-time "0.12.0"]
+   [clj-time "0.13.0"]
    [compojure "1.5.1"]
    [com.andrewmcveigh/cljs-time "0.4.0"]
    [com.cemerick/friend "0.2.3"]
@@ -26,7 +26,7 @@
    [ring/ring-jetty-adapter "1.5.0"]
    [secretary "1.2.3"]
    [wormbase/pseudoace "0.4.10"]]
-  :description "WormBase curation tools"
+  :description "WormBase Query and data exploration tools"
   :source-paths ["src"]
   :plugins [[lein-asset-minifier "0.3.0"]
             [lein-cljsbuild "1.1.3"]
