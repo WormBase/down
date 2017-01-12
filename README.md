@@ -1,8 +1,8 @@
-# down-tools
+# down
 
-A set of tools for exploring the WormBase Datomic database.
+Web app(s) for exploring and querying the WormBase database (datomic).
 
-## Clojure Script Web Application(s)
+## Web Application(s)
 
 Web applications which use the [pseduoace](https://github.com/WormBase/pseudoace)
 representation of the [Wormbase database](https://github.com/WormBase/db-migration)
@@ -20,19 +20,20 @@ This repository comprises of two conceptually separate applications:
   can be exported in CSV, ACeDB (with or without timestamps) and ACeDB
   "KeySets".
 
-## Environment setup
+These web applications are written in Clojure(Script).
 
-Ensure to configure [AWS credentials][2].
-
-### Quick start
+### Development quick-start
 
 ```bash
-lein cljsbuild once prod dev && \
-lein minify-assets prod dev && \
-lein with-profile prod ring server-headless
+rm resources/public/js/site.min.js && \
+lein clean && \
+lein cljsbuild once dev && \
+lein minify-assets dev && \
+lein with-profile dev  server-headless
 ```
 
-The server will be running on port 3000 (jetty default).
+By default, the server will run on port 3000.
+
 To view in a web browser:
 ```bash
 python -m webbrowser http://localhost:3000/colonnade/
