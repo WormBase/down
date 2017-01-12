@@ -11,7 +11,7 @@
 	}],
 	"environment": [{
 	    "name": "TRACE_DB",
-	    "value": "datomic:ddb://us-east-1/WS256/wormbase"
+	    "value": "datomic:ddb://us-east-1/WS257/wormbase"
 	}, {
 	    "name": "TRACE_REQUIRE_LOGIN",
 	    "value": "0"
