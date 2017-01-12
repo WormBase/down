@@ -22,13 +22,11 @@
    [ring.util.response :refer (redirect file-response)]
    [web.anti-forgery :refer (wrap-anti-forgery-ssl)]
    [web.colonnade :refer (colonnade post-query)]
-   [web.curate.core :refer (curation-forms)]
    [web.db :refer (datomic-conn datomic-uri)]
    [web.edn :refer (wrap-edn-params-2)]
    [web.ssl :as ssl]
    [web.trace :as trace]
-   [web.users :as users]
-   [web.widgets :refer (gene-genetics-widget gene-phenotypes-widget)])
+   [web.users :as users])
   (:gen-class))
 
 (def ^:private rules
@@ -108,23 +106,11 @@
    (GET "/view/:class/:id" req (trace/viewer-page req))
    (GET "/gene-by-name/:name" {params :params}
      (get-gene-by-name db (:name params)))
-   (GET "/gene-phenotypes/:id" {params :params}
-     (gene-phenotypes-widget db (:id params)))
-   (GET "/gene-genetics/:id" {params :params}
-     (gene-genetics-widget db (:id params)))
-
    (GET "/schema" {db :db} (trace/get-schema db))
    (POST "/transact" req
      (friend/authorize #{::user}
                        (d/transact (d/connect (datomic-uri)) req)))
    (context "/colonnade" req (colonnade db))
-   (context "/curate"
-       req
-     (friend/authorize
-      #{::user}
-      (if (env :trace-enable-curation-forms)
-        curation-forms
-        (GET "/*" [] "Curation disabled on this server"))))
    (route/files "/" {:root "resources/public"})))
 
 (defn init
