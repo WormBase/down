@@ -48,7 +48,7 @@
 
 (def ^:private top-bar-height 100) ;; px
 
-(defn scroll-into-view 
+(defn scroll-into-view
   "Attempt to make `element` visible.  Takes into account the height of the
    non-scrolling toolbar (which breaks Element.prototype.scrollIntoView)."
   [element]
@@ -58,7 +58,7 @@
         rect        (.getBoundingClientRect element)
         element-top (.-top rect)
         element-bot (.-bottom rect)]
-    (cond 
+    (cond
       (< element-top top-bar-height)
       (set! (.-scrollTop body) (max 0 (+ scroll-top (- element-top top-bar-height))))
 
@@ -68,7 +68,7 @@
 (defn- fetch-missing-txns [app]
   (let [txns (or (:txns @app) {})]
     (letfn [(scan-missing [missing {:keys [txn val]}]
-              (let [missing 
+              (let [missing
                     (if (sequential? val)
                       (reduce scan-missing missing (mapcat :values val))
                       missing)]
@@ -86,7 +86,7 @@
              (om/transact! app :txns #(merge %  (->> (for [t (:txns resp)]
                                                        [(:db/id t) t])
                                                      (into {})))))))))))
-                           
+
 (defn- props->state [props]
   (vec (for [p props :let [v (:values p)]]
          (assoc p
@@ -115,9 +115,9 @@
     (-write writer " ")
     (-write writer (str id))
     (-write writer "]")))
-      
+
 (def tempid
-  "Client-side analog of the Datomic tempid function.  Each call returns a unique 
+  "Client-side analog of the Datomic tempid function.  Each call returns a unique
    object which prints as a #db/id tagged literal."
   (let [seed (atom -1000)]
     (fn [part]
@@ -176,8 +176,6 @@
       (if (and (not editing)
                (om/get-state owner :editing))
         (.focus (om/get-node owner "input"))))))
-      
-
 
 (defn int-edit [{:keys [added] :as vh} owner]
   (reify
@@ -273,7 +271,7 @@
       (if (and (not editing)
                (om/get-state owner :editing))
         (.focus (om/get-node owner "input"))))
-    
+
     om/IRenderState
     (render-state [_ {:keys [editing]}]
       (let [val (or (:edit vh) (:val vh))
@@ -351,7 +349,7 @@
                                        (.stopPropagation event)
                                        (om/set-state! owner :editing true))}
                    (or vname "New reference..."))
-         
+
          (dom/div
           {:style (display editing)
            :class "candidate-list"}
@@ -365,7 +363,7 @@
              c))
           (if (> ncand (count candidates))
             (dom/div (dom/em (str "And " (- ncand (count candidates)) " more")))))
-         
+
          (dom/input
           {:ref "input"
            :style (display editing)
@@ -397,7 +395,7 @@
                         (om/update! vh :edit [class vname :create])
                         (om/set-state! owner :editing false))}
            "Create"))
-         
+
             ))))))
 
 (defn curator-name [c]
@@ -413,7 +411,7 @@
     om/IRenderState
     (render-state [_ {:keys [history hdata]}]
      (let [txn-map (om/observe owner (txns))]
-      (dom/span 
+      (dom/span
        {:class "txn"
         :on-click (fn [_]
                     (when (and (not history)
@@ -425,12 +423,12 @@
                     (om/update-state! owner :history not))}
        (if history
          (dom/div {:class "x-history-box-holder"}
-            (dom/div {:class "history-box"} 
+            (dom/div {:class "history-box"}
                (if hdata
                  (let [txmap (->> (map (juxt :db/id identity) (:txns hdata))
                                   (into {}))]
                    (dom/table {:class "history-table table table-striped"}
-                    (dom/thead 
+                    (dom/thead
                      (dom/tr
                       (for [c ["Date" "Action" "Value" "Who?" "Txn"]]
                         (dom/th c))))
@@ -475,7 +473,7 @@
          (if txn
            (if-let [txn-data (txn-map txn)]
              (str (->> (:db/txInstant txn-data)
-                      (format-local))
+                      (format-local-time))
                   (if-let [c (:wormbase/curator txn-data)]
                     (str " (" (curator-name c) ")")
                     (if-let [d (:importer/ts-name txn-data)]
@@ -483,8 +481,8 @@
              (str txn))
            "NEW")))))))
 
-(defn item-view [{:keys [val edit txn remove added] :as val-holder} 
-                 owner 
+(defn item-view [{:keys [val edit txn remove added] :as val-holder}
+                 owner
                  {:keys [key type entid class comp?]}]
   (reify
     om/IDidMount
@@ -509,9 +507,9 @@
           {:tabIndex -1
            :on-click #(om/transact! val-holder :remove not)}
           (dom/i {:class "fa fa-eraser"})))
-       
-       
-       
+
+
+
        (dom/span
         {:class "trace-item-content"
          :style (if remove
@@ -520,7 +518,7 @@
         (cond
          comp?
          (om/build tree-view val-holder {:opts {:primary-ns (component-ns key)}})
-         
+
          (or (sequential? val)
              (sequential? edit)
              class)
@@ -544,7 +542,7 @@
          (if edit-mode
            (om/build int-edit val-holder)
            (dom/span (str val)))
-         
+
          (= type :db.type/boolean)
          (if edit-mode
            (om/build boolean-edit val-holder)
@@ -573,7 +571,6 @@
                 (not comp?))
          (om/build txn-view val-holder {:opts {:key key :entid entid}}))
        )))))
-      
 
 (defn list-view [data owner {:keys [entid]}]
   (reify
@@ -583,7 +580,7 @@
             vcnt (or (:count data)
                      (count (:values data)))]
           (dom/span {:className "values-holder"}
-                    (dom/button 
+                    (dom/button
                      {:onClick (fn [_]
                                  (om/transact! data :collapsed not)
                                  (if (and (not (:collapsed @data))
@@ -621,7 +618,7 @@
 
                      (empty? (:values data))
                      (dom/img {:src "/img/spinner_24.gif"})
-                     
+
                      :default
                      (dom/div {:class "values-list"}
                               (for [v (:values data)]
@@ -731,7 +728,7 @@
                             (om/set-state! owner :open false)
                             (add-item data a))}
                (str (:db/ident a)))))))))))
-       
+
 
 (defn- group-props [props]
   (loop [grouped         (group-by :group props)
@@ -751,7 +748,7 @@
     om/IInitState
     (init-state [_]
       {})
-    
+
     om/IRenderState
     (render-state [_ state]
       (let [mode  (om/observe owner (mode))
@@ -814,7 +811,7 @@
              (concat txlist (gather-txdata (:id val) (:val val)))))
          txlist
          (:values prop))
-        
+
         (reduce
          (fn [txlist {:keys [edit val remove]}]
            (let [is-edit (and (not (nil? edit))
@@ -844,7 +841,7 @@
       (om/update! app [:mode :editing] true)
       (do
         (om/update! app [:mode :fetching-schema] true)
-        (edn-xhr 
+        (edn-xhr
          "/schema"
          (fn [resp]
            (om/update! app :schema (process-schema resp))
@@ -880,14 +877,14 @@
 
 (defn- trace-load [app c i]
   (om/update! app [:mode :loading] true)
-  (edn-xhr 
+  (edn-xhr
    (str "/raw2/" c "/" i "?max-in=5&max-out=10&txns=false")
    (fn [resp]
      (set! (.-title js/document) i)
      (if resp
        (do
          (om/transact! app (fn [app]
-                             (assoc app 
+                             (assoc app
                                     :mode    (merge (:mode app)
                                                     {:loading false
                                                      :editing false})
@@ -922,14 +919,12 @@
     (will-mount [_]
       (defroute "/view/:class/:id" {c :class i :id}
         (trace-load app c i))
-                                 
+
       (secretary/dispatch! (.-pathname js/window.location))
       (.addEventListener js/window
                          "popstate"
                          (fn [e]
                            (secretary/dispatch! (.-pathname js/window.location)))))
-
-
     om/IDidMount
     (did-mount [_]
       (.addEventListener js/window
@@ -943,7 +938,7 @@
 
                  (and ctrl (= code 83))
                  (submit app)
-                      
+
                  (and ctrl (= code 84))
                  (do
                    (if (:txnData (:mode @(om/transact! app [:mode :txnData] not)))
@@ -960,7 +955,7 @@
                (.preventDefault ev)
                (.stopPropagation ev))))
          false))
-    
+
     om/IRender
     (render [_]
       (dom/div {:class "trace-body"}
@@ -1043,10 +1038,8 @@
   (om/root trace-view    app-state {:target (gdom/getElement "tree")})
   (om/root trace-title   app-state {:target (gdom/getElement "page-title")})
   (om/root trace-tools   app-state {:target (gdom/getElement "header-content")})
-
   ;; Non-OM code, needs to explicitly deref the app-state atom to
   ;; see if we're currently editing.
-
   (.addEventListener
    js/window
    "beforeunload"
