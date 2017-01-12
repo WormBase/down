@@ -972,10 +972,14 @@
                  (dom/p (:error app))
 
                  :default
-                 (om/build tree-view app {:opts {:group? true
-                                                 :primary-ns (some-> (first (:ident app))
-                                                                     (namespace))}}))))))
-                           
+                 (om/build
+                  tree-view
+                  app
+                  {:opts
+                   {:group? true
+                    :primary-ns
+                    (some-> (first (:ident app))
+                            (namespace))}}))))))
 
 (defn trace-tools [app owner]
   (reify
