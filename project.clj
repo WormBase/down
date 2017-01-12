@@ -49,35 +49,31 @@
   :minify-assets
   {:dev
    {:assets
-    {"resources/public/css/main.min.css"
-     ["resources/public/css/trace.css"]
-     "resources/public/js/main.min.js"
-     ["resources/public/js/main.js"]}
-    :options {:optimisation :none}}
+    {"resources/public/css/site.min.css" "resources/public/css/trace.css"}
+     :options {:optimization :none}}
    :prod
    {:assets
-    {"resources/public/css/main.min.css"
-     ["resources/public/css/trace.css"]
-     "resources/public/js/main.min.js"
-     ["resources/public/js/main.js"]}}
-   :options {:optimisation :advanced}}
+    {"resources/public/css/site.min.css" "resources/public/css/trace.css"}
+   :options {:optimization :advanced}}}
   :cljsbuild
   {:builds
    {:dev
     {:source-paths ["src"]
      :compiler
-     {:optimizations :whitespace
+     {:optimizations :none
       :pretty-print true
-      :output-to "resources/public/js/main-debug.js"
+      :output-to "resources/public/js/site.min.js"
       :output-dir "resources/public/js/out-dev"
-      :source-map "resources/public/js/main.js.map"}}
+      :source-map "resources/public/js/site.js.map"}}
     :prod
     {:source-paths ["src"]
      :compiler
-     {:pretty-print false
-      :output-to "resources/public/js/main.js"
+     {:optimizations :simple
+      :verbose false
+      :pretty-print false
+      :output-to "resources/public/js/site.min.js"
       :output-dir "resources/public/js/out"
-      :source-map "resources/public/js/main.js.map"}}}}
+      :source-map "resources/public/js/site.js.map"}}}}
   :main web.core
   :aot [web.core]
   :ring {:init web.core/init
