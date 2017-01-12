@@ -564,8 +564,8 @@
            (dom/span (str val)))
 
          (= type :db.type/instant)
-         (dom/span (format-local val))
-         
+         (dom/span (format-local-time val))
+
          :default
          (dom/span (str val))))
 
