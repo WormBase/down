@@ -37,3 +37,4 @@ docker/app.jar
 /resources/public/js/out-dev/
 /resources/public/js/out/
 resources/public/js/main*.js*
+/resources/public/js/site.js.map
