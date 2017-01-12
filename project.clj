@@ -34,7 +34,6 @@
             [lein-pprint "1.1.1"]
             [lein-ring "0.9.7"]]
   :javac-options ["-target" "1.8" "-source" "1.8"]
-  :license "GPLv2"
   :min-lein-version "2.0.0"
   :jvm-opts
   ["-Xmx6G"
