@@ -762,12 +762,12 @@
                             (group-props props)
                             [[nil props]])]
         (dom/div
-         (when (:editing mode) 
+         (when (:editing mode)
            (om/build add-button data))
          (dom/table {:border "1"
                      :className "trace-tree table table-striped table-condensed"}
           (dom/tbody nil
-           (for [[group-label props] grouped-props]
+           (for [[group-label props] (sort-by first grouped-props)]
             (list
               (if group-label
                 (dom/tr {:style {:background "darkgray"}
@@ -775,7 +775,7 @@
                         (dom/td {:colSpan 2}
                                 (str "[" (if (state group-label) "+" "-") "] "
                                      group-label))))
-              (for [prop props]
+              (for [prop (sort-by :key props)]
                 (dom/tr {:style (display (not (state group-label)))}
                         (dom/td {:class "prop-name"}
                            (let [key (:key prop)]
