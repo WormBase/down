@@ -383,7 +383,8 @@
                        x))
                    (:tx edn-params))
                   {:db/id (d/tempid :db.part/tx)
-                   :wormbase/curator [:person/id (:wbperson (friend/current-authentication req))]}))]
+                   :wormbase/curator
+                   [:person/id (:wbperson (friend/current-authentication req))]}))]
       {:status 200
        :body (pr-str {:status "OK"
                       :ids (id-report (:db-after txr) (:tx-data txr))})})

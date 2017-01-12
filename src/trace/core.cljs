@@ -1,25 +1,25 @@
 (ns trace.core
-  (:require [cljs.reader :as reader]
-            [clojure.string :as str]
-            [om.core :as om :include-macros true]
-            [om-tools.dom :as dom :include-macros true]
-            [secretary.core :as secretary :refer-macros [defroute]]
-            [trace.utils :refer (edn-xhr edn-xhr-post conj-if process-schema)]
-            [goog.dom :as gdom]
-            [cljs-time.core :as time]
-            [cljs-time.format :as tf]
-            [cljs-time.coerce :as tc]))
+  (:require
+   [cljs-time.coerce :as tc]
+   [cljs-time.core :as time]
+   [cljs-time.format :as tf]
+   [clojure.string :as str]
+   [goog.dom :as gdom]
+   [om-tools.dom :as dom :include-macros true]
+   [om.core :as om :include-macros true]
+   [secretary.core :as secretary :refer-macros (defroute)]
+   [trace.utils :refer (edn-xhr edn-xhr-post conj-if process-schema)]))
 
 (enable-console-print!)
 
-(def app-state (atom {:props [] 
+(def app-state (atom {:props []
                       :mode {:loading true
                              :editing false
                              :txnData false}}))
 
 (def time-formatter (tf/formatter "yyyy-MM-dd HH:mm:ss"))
 
-(defn format-local [time]
+(defn format-local-time [time]
   (->> (tc/from-date time)
        (time/to-default-time-zone)
        (tf/unparse-local-date time-formatter)))
@@ -137,16 +137,18 @@
     (did-mount [_]
       (if (= added @added-id)
         (.focus (om/get-node owner "input"))))
-    
+
     om/IInitState
     (init-state [_]
       {:editing (= added @added-id)})
-    
+
     om/IRenderState
     (render-state [_ {:keys [editing]}]
       (let [val (or (:edit vh) (:val vh))]
         (dom/span {:class "edit-root"
-                   :tabIndex (if editing -1 0)  ; Make un-tabbable when already editing so shift-TAB works right.
+                   :tabIndex
+                   ; Make un-tabbable when already editing so shift-TAB works right.
+                   (if editing -1 0)
                    :on-focus #(om/set-state! owner :editing true)}
          (dom/span {:class "edit-inactive"
                     :style (display (not editing))
@@ -184,17 +186,19 @@
     (did-mount [_]
       (if (= added @added-id)
         (.focus (om/get-node owner "input"))))
-    
+
     om/IInitState
     (init-state [_]
       {:editing (= added @added-id)})
 
-    om/IRenderState 
+    om/IRenderState
     (render-state [_ {:keys [editing]}]
-      (let [val (or (:edit vh) (:val vh))]   ;; works because 0 is truthy here.
-       (dom/span {:class "edit-root"
-                  :tabIndex (if editing -1 0)  ; Make un-tabbable when already editing so shift-TAB works right.
-                  :on-focus #(om/set-state! owner :editing true)}
+      (let [val (or (:edit vh) (:val vh))] ;; works because 0 is truthy here.
+        (dom/span
+         {:class "edit-root"
+          ;; Make un-tabbable when already editing so shift-TAB works right.
+          :tabIndex (if editing -1 0)
+          :on-focus #(om/set-state! owner :editing true)}
         (dom/span {:class "edit-inactive"
                    :style (display (not editing))
                    :on-double-click (fn [event]
@@ -237,7 +241,8 @@
                   (:edit vh))
             val (if (= val :empty) "New value..." val)]
         (dom/span {:class "edit-root"
-                   :tabIndex (if editing -1 0)  ; Make un-tabbable when already editing so shift-TAB works right.
+                   ;; Make un-tabbable when already editing so shift-TAB works right.
+                   :tabIndex (if editing -1 0)
                    :on-focus #(om/set-state! owner :editing true)}
          (dom/span {:class "edit-inactive"
                     :style (display (not editing))
@@ -276,7 +281,8 @@
             schema (om/observe owner (schema))
             enum-values ((:attrs schema) tns)]
         (dom/span {:class "edit-root"
-                   :tabIndex (if editing -1 0)  ; Make un-tabbable when already editing so shift-TAB works right.
+                   ;; Make un-tabbable when already editing so shift-TAB works right.
+                   :tabIndex (if editing -1 0)
                    :on-focus #(om/set-state! owner :editing true)}
          (dom/span {:class "edit-inactive"
                     :style (display (not editing))
@@ -331,9 +337,10 @@
                        (om/set-state! owner :checked prefix)
                        (om/set-state! owner :ncand ncnt)
                        (om/set-state! owner :candidates names)))))]
-        (dom/span {:class "edit-root"
-                   :tabIndex (if editing -1 0)  ; Make un-tabbable when already editing so shift-TAB works right.
-                   :on-focus #(om/set-state! owner :editing true)}
+         (dom/span {:class "edit-root"
+                    ;; Make un-tabbable when already editing so shift-TAB works right.
+                    :tabIndex (if editing -1 0)
+                    :on-focus #(om/set-state! owner :editing true)}
          (dom/i {:class "fa fa-plus-circle"
                  :style (display create?)})
          (dom/span {:class "edit-inactive"
@@ -435,7 +442,7 @@
                                  txid (:txid (first datoms))
                                  txn  (txmap txid)
                                  time (->> (:db/txInstant txn)
-                                           (format-local))
+                                           (format-local-time))
                                  who  (if-let [c (:wormbase/curator txn)]
                                         (curator-name c)
                                         (:importer/ts-name txn))
@@ -490,8 +497,9 @@
      (let [mode      (om/observe owner (mode))
            txnData   (:txnData mode)
            edit-mode (and (:editing mode)
-                          (not (= (name key) "id")))]    ;; blacklist primary entity IDs
-      (dom/div 
+                          ;; blacklist primary entity IDs
+                          (not (= (name key) "id")))]
+      (dom/div
        {:class (if (and edit (not= edit val))
                   "trace-item edited"
                   "trace-item")}
@@ -544,7 +552,10 @@
 
          (and (= type :db.type/ref))
          (if edit-mode
-           (om/build enum-edit val-holder {:opts {:tns (str (namespace key) "." (name key))}})
+           (om/build
+            enum-edit
+            val-holder
+            {:opts {:tns (str (namespace key) "." (name key))}})
            (dom/span (name val)))
 
          (= type :db.type/string)
@@ -597,7 +608,8 @@
                                                      (props->state (:val v))
                                                      (:val v))))))
                                         (if (:txnData @mode)
-                                          (fetch-missing-txns (om/root-cursor app-state))))))))
+                                          (fetch-missing-txns
+                                           (om/root-cursor app-state))))))))
                       :className "collapse-button"
                       :style (display (> vcnt 1))}
                      (if (:collapsed data)
@@ -652,7 +664,9 @@
                 (fn [props]
                   (let [dummy          (dummy-item item)
                         attrs          (get-in @app-state [:schema :attrs-by-ident])
-                        [[idx holder]] (keep-indexed #(if (= (:key %2) (:db/ident item)) [%1 %2]) props)]
+                        [[idx holder]] (keep-indexed #(if (= (:key %2)
+                                                             (:db/ident item))
+                                                        [%1 %2]) props)]
                     (if holder
                       (assoc props idx (assoc holder
                                          :values (conj (:values holder) dummy)
@@ -665,13 +679,14 @@
                                         :comp (:db/isComponent item)
                                         :class (:pace/obj-ref item)
                                         :values [dummy]})
-                           (sort-by 
+                           (sort-by
                             (fn [{:keys [key]}]
-                              (if (= (.charAt (name key) 0) "_") 
-                                1000000000000           ;; Keep inbound XREFs at end.  They should remain stable.
+                              (if (= (.charAt (name key) 0) "_")
+                                ;; Keep inbound XREFs at end.
+                                ;; They should remain stable.
+                                1000000000000
                                 (:db/id (attrs key)))))
                            (vec)))))))
-                                         
 
 (defn add-button [data owner]
   (reify
@@ -768,13 +783,15 @@
                                (name key)
                                (str key))))
                         (dom/td {:class "prop-val"}
-                           (om/build list-view prop 
-                                     {:key :key      ;; Need to explicitly provide a react key
-                                                     ;; here other wise some very silly element
-                                                     ;; recycling can occur when a new property
-                                                     ;; gets inserted.
-                                      :opts 
-                                      {:entid (:id data)}})))))))))))))
+                                (om/build
+                                 list-view prop
+                                 ;; Need to explicitly provide a react key
+                                 {:key :key
+                                  ;; here other wise some very silly element
+                                  ;; recycling can occur when a new property
+                                  ;; gets inserted.
+                                  :opts
+                                  {:entid (:id data)}})))))))))))))
 
 (defn- pack-id [id]
   (if (string? id)
@@ -880,7 +897,10 @@
                                                     [(:db/id t) t])
                                                   (into (if (= (:id resp) (:id app))
                                                           (:txns app)
-                                                          {})))   ;; Start again with empty txn map if moving to a new object
+                                                          ;; Start again with empty
+                                                          ;; txn map if moving
+                                                          ;; to a new object
+                                                          {})))
                                     :id      (:id resp)
                                     :ident [(keyword c "id") i])))
          (if (:txnData (:mode @app))
@@ -964,14 +984,22 @@
       (let [mode (:mode app)]
         (dom/div
          nil
-         (dom/div {}
-                  (dom/label "Timestamps"
-                    (dom/input {:type "checkbox"
-                                :checked (:txnData (:mode app))
-                                :on-click (fn [_]
-                                            (if (:txnData (:mode @(om/transact! app [:mode :txnData] not)))
-                                              (fetch-missing-txns app)))}))
-                  
+         (dom/div
+          {}
+          (dom/label
+           "Timestamps"
+           (dom/input {:type "checkbox"
+                       :checked (:txnData (:mode app))
+                       :on-click
+                       (fn [_]
+                         (if (:txnData
+                              (:mode
+                               @(om/transact!
+                                 app
+                                 [:mode :txnData]
+                                 not)))
+                           (fetch-missing-txns app)))}))
+
                   (when (:fetching-schema mode)
                     (dom/span "Fetching schema..."))
 
@@ -982,17 +1010,24 @@
                       (dom/button {:on-click #(edit app)}
                                    "Edit"))
 
-                      #_(when (and js/trace_logged_in
-                                 (:editing mode))
-                        (dom/button {:on-click #(println (gather-txdata (:id @app-state) (:props @app-state)))}
-                                    "Preview"))
+                     #_(when (and js/trace_logged_in
+                                  (:editing mode))
+                         (dom/button {:on-click
+                                      #(println (gather-txdata
+                                                 (:id @app-state)
+                                                 (:props @app-state)))}
+                                     "Preview"))
 
                       (when (and js/trace_logged_in
                                  (:editing mode))
-                        (dom/button {:on-click #(submit app)
-                                     :disabled (empty? (gather-txdata (:id @app-state) (:props @app-state)))}
-                                    "Save"))
-          
+                        (dom/button
+                         {:on-click #(submit app)
+                          :disabled
+                          (empty? (gather-txdata
+                                   (:id @app-state)
+                                   (:props @app-state)))}
+                         "Save"))
+
                       (when (and js/trace_logged_in
                                  (:editing mode))
                         (dom/button {:on-click #(cancel app)}

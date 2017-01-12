@@ -98,8 +98,8 @@
            (dom/option nil)
            (concat
             #_(for [type [:db.type/string
-                          :db.type/long :
-                          db.type/instant
+                          :db.type/long
+                          :db.type/instant
                           :db.type/ref
                           :db.type/float
                           :db.type/double

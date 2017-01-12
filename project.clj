@@ -81,22 +81,24 @@
   :dev-dependencies [[acyclic/squiggly-clojure "0.1.6"]
                      [ring/ring-devel "1.5.0"]]
   :profiles {:uberjar {:aot :all}
-             :datomic-pro [{:dependencies [[com.datomic/datomic-pro "0.9.5385"
-                                            :exclusions [joda-time]]]}]
-             :ddb [{:dependencies [[com.amazonaws/aws-java-sdk-dynamodb "1.11.6"
-                                   :exclusions [joda-time]]]}]
+             :datomic-pro
+             [{:dependencies [[com.datomic/datomic-pro "0.9.5385"
+                               :exclusions [joda-time]]]}]
+             :ddb
+             [{:dependencies
+               [[com.amazonaws/aws-java-sdk-dynamodb "1.11.6"
+                 :exclusions [joda-time]]]}]
              :dev [:ddb
                    :datomic-pro
                    {:plugins [[cider/cider-nrepl "0.13.0"]
                               [lein-ancient "0.6.8"]]
-                    :env {:trace-db "datomic:ddb-local://localhost:8000/"}
+                    :env {:trace-db "datomic:dev://localhost:4334/WS257"}
                     :ring {:init web.core/init
                            :handler web.core/handler
                            :nrepl {:start? true :port 8131}
                            :resource-paths ["test/resources"]}}]
              :prod [:ddb
                     :datomic-pro
-                    {:env {:trace-db "datomic:ddb://us-east-1/WS255/wormbase"
-                           :trace-port "80"
-                           :trace-require-login "0"
-                           :trace-accept-rest-query "1"}}]})
+                    {:env
+                     {:trace-port "80"
+                      :trace-require-login "0"}}]})
