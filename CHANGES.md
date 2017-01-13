@@ -1,6 +1,6 @@
 # Change log
 
-## 0.1 (un-released)
+## 0.1 (2017-01-13)
 
  - Initial version.
  - Import db-prototypes sources and update dependency versions.
