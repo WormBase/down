@@ -8,6 +8,7 @@ DB_URI ?= $(shell sed -rn 's|value:\s+(datomic.*)|\1|p' ${EBX_CONFIG} | \
 WS_VERSION ?= $(shell echo ${DB_URI} | \
                       sed -rn 's|datomic.*(WS\d*)|\1|p' | \
                 tr -d " ")
+WS_VERSION_LC ?= $(shell echo ${WS_VERSION} | tr A-Z a-z)
 DEPLOY_JAR := docker/app.jar
 WB_ACC_NUM := 357210185381
 FQ_PREFIX := ${WB_ACC_NUM}.dkr.ecr.us-east-1.amazonaws.com
@@ -108,10 +109,10 @@ eb-create: $(call print-help,eb-create,\
                --region=us-east-1 \
                --tags="CreatedBy=${AWS_EB_PROFILE},Role=WebService" \
                --instance-type=m3.xlarge \
-               --cname="down=${WS_VERSION}" \
+               --cname="down-${WS_VERSION_LC}" \
                --vpc.id="vpc-8e0087e9" \
-               --vpc.ec2subnets="subnet-a33a2bd5" \
-               --vpc.securitygroups="sg-2c332257" \
+               --vpc.ec2subnets="subnet-1ce4c744" \
+               --vpc.securitygroups="sg-a100c6dd" \
                --single
 
 .PHONY: clean
