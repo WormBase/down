@@ -3,7 +3,7 @@ APP_CONTAINER_NAME := wormbase/down
 PROXY_CONTAINER_NAME := ${APP_CONTAINER_NAME}_nginx-proxy
 VERSION ?= $(shell git describe --abbrev=0 --tags)
 EBX_CONFIG = .ebextensions/.config
-DB_URI ?= $(shell sed -rn 's|value:\s+(datomic.*)|\1|p' ${EBX_CONFIG} | \
+DB_URI ?= $(shell sed -rn 's|value:\s+(datomic.*)/wormbase|\1|p' ${EBX_CONFIG} | \
 	          tr -d " ")
 WS_VERSION ?= $(shell echo ${DB_URI} | \
                       sed -rn 's|datomic.*(WS\d*)|\1|p' | \
@@ -33,6 +33,7 @@ ${DEPLOY_JAR}: $(call print-help,docker/app.jar, "Build the jar file")
 .PHONY: print-ws-version
 print-ws-version:
 	@echo ${WS_VERSION}
+	@echo ${WS_VERSION_LC}
 
 .PHONY: build-nginx-proxy
 build-nginx-proxy:
