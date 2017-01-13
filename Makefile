@@ -108,7 +108,7 @@ eb-create: $(call print-help,eb-create,\
 	@eb create down-${WS_VERSION} \
                --region=us-east-1 \
                --tags="CreatedBy=${AWS_EB_PROFILE},Role=WebService" \
-               --instance-type=m3.xlarge \
+               --instance_type=m3.xlarge \
                --cname="down-${WS_VERSION_LC}" \
                --vpc.id="vpc-8e0087e9" \
                --vpc.ec2subnets="subnet-1ce4c744" \
