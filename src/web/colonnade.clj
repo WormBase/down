@@ -33,12 +33,7 @@
     [:body
      [:div.root
       [:div.header
-       [:div.header-identity
-        [:div {:style "display: inline-block"}
-         [:img.banner {:src "/img/logo_wormbase_gradient_small.png"}]
-         (if-let [name (:wormbase/system-name
-                        (entity db :wormbase/system))]
-           [:div.system-name name])]]
+       (identity-header db)
        [:div.header-main
         [:h1#page-title "Colonnade"]
         [:img.banner

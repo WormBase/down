@@ -11,7 +11,8 @@
    [hiccup.core :refer (html)]
    [pseudoace.utils :refer (conj-if)]
    [ring.util.response :refer (file-response)]
-   [web.anti-forgery :refer (*anti-forgery-token*)]))
+   [web.anti-forgery :refer (*anti-forgery-token*)]
+   [web.common :refer (identity-header)]))
 
 ;;
 ;; Back-end for the TrACe tree-viewer/editor.  Current TrACe uses the "obj2" protocol.
@@ -339,11 +340,7 @@
     [:body
      [:div.root
       [:div.header
-       [:div.header-identity
-        [:div {:style "display: inline-block"}
-         [:img.banner {:src "/img/logo_wormbase_gradient_small.png"}]
-         (if-let [name (:wormbase/system-name (d/entity db :wormbase/system))]
-           [:div.system-name name])]]
+       (identity-header db)
        [:div.header-main
         [:h1#page-title "TrACeView"]
         [:div#header-content]]]

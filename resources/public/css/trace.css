@@ -11,7 +11,11 @@ div.header {
     box-sizing: border-box;
 }
 
-div.header-identity {.
+div.header-identity {
+}
+
+div#header-content input[type="checkbox"] {
+    margin-left: 4px;
 }
 
 div.header-main {
