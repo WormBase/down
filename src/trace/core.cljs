@@ -767,7 +767,9 @@
            (for [[group-label props] (sort-by first grouped-props)]
             (list
               (if group-label
-                (dom/tr {:style {:background "darkgray"}
+                (dom/tr {:style {:background "darkgray"
+                                 :cursor "hand"
+                                 :title "Toggle visibility"}
                          :on-click #(om/update-state! owner group-label not)}
                         (dom/td {:colSpan 2}
                                 (str "[" (if (state group-label) "+" "-") "] "
