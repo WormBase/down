@@ -79,8 +79,7 @@
          :handler web.core/handler}
   :dev-dependencies [[acyclic/squiggly-clojure "0.1.6"]
                      [ring/ring-devel "1.5.0"]]
-  :profiles {:uberjar {:aot :all}
-             :datomic-pro
+  :profiles {:datomic-pro
              [{:dependencies [[com.datomic/datomic-pro "0.9.5554"
                                :exclusions [joda-time]]]}]
              :ddb
@@ -111,4 +110,5 @@
                     {:env
                      {:trace-db "datomic:ddb://us-east-1/WS257/wormbase"
                       :trace-port "80"
-                      :trace-require-login "0"}}]})
+                      :trace-require-login "0"}}]
+             :uberjar [:prod {:aot :all}}])
