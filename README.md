@@ -4,8 +4,8 @@ Web app(s) for exploring and querying the WormBase database (datomic).
 
 ## Web Application(s)
 
-Web applications which use the [pseduoace](https://github.com/WormBase/pseudoace)
-representation of the [Wormbase database](https://github.com/WormBase/db-migration)
+Web applications which use the [pseduoace][5]
+representation of the [Wormbase database][6]
 
 This repository comprises of two conceptually separate applications:
 
@@ -25,11 +25,9 @@ These web applications are written in Clojure(Script).
 ### Development quick-start
 
 ```bash
-rm resources/public/js/site.min.js && \
 lein clean && \
 lein cljsbuild once dev && \
-lein minify-assets dev && \
-lein with-profile +dev ring server-headless
+lein ring server-headless
 ```
 
 By default, the server will run on port 3000.
@@ -53,7 +51,7 @@ In the examples below, please use `dev` or `prod` for the value of
 
        to their respective values, obtained from
        the
-       [google developers console](https://console.developers.google.com/apis/credentials/oauthclient?project=wb-test-trace)
+       [google developers console][4]
 
     3. Build the application, checking for old dependencies
 
@@ -79,7 +77,8 @@ In the examples below, please use `dev` or `prod` for the value of
 
 ### Setup of ECR repositories
 
-Ensure the following two repositories are created in the [ECR][Elastic Container Registry]:
+Ensure the following two repositories are created in
+the [ECR][Elastic Container Registry]:
 
   * wormbase/down
   * wormbase/down_nginx-proxy
@@ -156,4 +155,7 @@ Cloudwatch has been confiugured using as per the official [guide][3].
 [1]: http://parasite.wormbase.org/biomart/
 [2]: https://github.com/WormBase/wormbase-architecture/wiki/AWS-Credentials
 [3]: http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/AWSHowTo.cloudwatchlogs.html#AWSHowTo.cloudwatchlogs.files
+[4]: https://console.developers.google.com/apis/credentials/oauthclient?project=wb-test-trace
+[5]: /WormBase/pseudoace
+[6]: /WormBase/db-migration
 
