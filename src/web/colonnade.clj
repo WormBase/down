@@ -1,16 +1,19 @@
 (ns web.colonnade
-  (:require [datomic.api :as d :refer (history q touch entity)]
-            [clojure.string :as str]
-            [ring.adapter.jetty :refer (run-jetty)]
-            [compojure.core :refer (defroutes GET POST routes)]
-            [compojure.route :as route]
-            [compojure.handler :as handler]
-            [hiccup.core :refer (html)]
-            [clojure.edn :as edn]
-            [clojure.data.csv :refer (write-csv)]
-            [pseudoace.acedump :as acedump]
-            [pseudoace.utils :refer (sort-by-cached)]
-            [web.anti-forgery :refer (*anti-forgery-token*)]))
+  (:require
+   [clojure.data.csv :refer (write-csv)]
+   [clojure.edn :as edn]
+   [clojure.string :as str]
+   [compojure.core :refer (defroutes GET POST routes)]
+   [compojure.handler :as handler]
+   [compojure.route :as route]
+   [datomic.api :as d :refer (history q touch entity)]
+   [hiccup.core :refer (html)]
+   [pseudoace.acedump :as acedump]
+   [pseudoace.utils :refer (sort-by-cached)]
+   [ring.adapter.jetty :refer (run-jetty)]
+   [web.anti-forgery :refer (*anti-forgery-token*)]
+   [web.common :refer (identity-header)]
+   [web.db :refer (ws-version)]))
 
 (defn- page [{:keys [db] :as req}]
   (html
