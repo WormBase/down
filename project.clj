@@ -89,15 +89,26 @@
                  :exclusions [joda-time]]]}]
              :dev [:ddb
                    :datomic-pro
-                   {:plugins [[cider/cider-nrepl "0.13.0"]
-                              [lein-ancient "0.6.8"]]
-                    :env {:trace-db "datomic:dev://localhost:4334/WS257"}
+                   {:plugins [[cider/cider-nrepl "0.15.0-SNAPSHOT"]
+                              [jonase/eastwood "0.2.3"]
+                              [lein-ancient "0.6.8"]
+                              [refactor-nrepl "0.2.2"]]
+                    :env {:trace-db "datomic:dev://localhost:4334/WS257"
+                          :trace-require-login "0"
+                          :squiggly {:checkers [:eastwood]
+                                     :eastwood-exclude-linters [:kibit]}}
+                    :repl {:plugins
+                           [[cider/cider-nrepl "0.15.0-SNAPSHOT"]]
+                           :dependencies
+                           [[acyclic/squiggly-clojure "0.1.6"]
+                            [org.clojure/tools.nrepl "0.2.12"]]}
                     :ring {:init web.core/init
                            :handler web.core/handler
-                           :nrepl {:start? true :port 8131}
+                           :nrepl {:start? true}
                            :resource-paths ["test/resources"]}}]
              :prod [:ddb
                     :datomic-pro
                     {:env
-                     {:trace-port "80"
+                     {:trace-db "datomic:ddb://us-east-1/WS257/wormbase"
+                      :trace-port "80"
                       :trace-require-login "0"}}]})
