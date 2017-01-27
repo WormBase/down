@@ -29,7 +29,7 @@ rm resources/public/js/site.min.js && \
 lein clean && \
 lein cljsbuild once dev && \
 lein minify-assets dev && \
-lein with-profile dev  server-headless
+lein with-profile +dev ring server-headless
 ```
 
 By default, the server will run on port 3000.
