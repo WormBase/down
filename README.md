@@ -150,5 +150,10 @@ The Makefile obtains the datomic URI from the file:
 Change the URI in the file `.ebextensions/.config` - this is the single
 location the URI should be defined within the project.
 
+### Cloudwatch w/Elasticbeanstalk
+Cloudwatch has been confiugured using as per the official [guide][3].
+
 [1]: http://parasite.wormbase.org/biomart/
 [2]: https://github.com/WormBase/wormbase-architecture/wiki/AWS-Credentials
+[3]: http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/AWSHowTo.cloudwatchlogs.html#AWSHowTo.cloudwatchlogs.files
+
