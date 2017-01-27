@@ -74,15 +74,14 @@
       :output-to "resources/public/js/site.min.js"
       :output-dir "resources/public/js/out"
       :source-map "resources/public/js/site.js.map"}}}}
-  :main web.core
-  :aot [web.core]
+  :main ^:skip-aot web.core
   :ring {:init web.core/init
          :handler web.core/handler}
   :dev-dependencies [[acyclic/squiggly-clojure "0.1.6"]
                      [ring/ring-devel "1.5.0"]]
   :profiles {:uberjar {:aot :all}
              :datomic-pro
-             [{:dependencies [[com.datomic/datomic-pro "0.9.5385"
+             [{:dependencies [[com.datomic/datomic-pro "0.9.5554"
                                :exclusions [joda-time]]]}]
              :ddb
              [{:dependencies
