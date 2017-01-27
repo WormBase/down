@@ -768,8 +768,8 @@
             (list
               (if group-label
                 (dom/tr {:style {:background "darkgray"
-                                 :cursor "hand"
-                                 :title "Toggle visibility"}
+                                 :cursor "hand"}
+                         :title "Toggle visibility"
                          :on-click #(om/update-state! owner group-label not)}
                         (dom/td {:colSpan 2}
                                 (str "[" (if (state group-label) "+" "-") "] "
