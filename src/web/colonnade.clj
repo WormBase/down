@@ -29,7 +29,7 @@
       {:rel "stylesheet"
        :href"//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"}]
      [:link
-      {:rel "stylesheet" :href "/css/site.min.css"}]]
+      {:rel "stylesheet" :href "/compiled/css/site.min.css"}]]
     [:body
      [:div.root
       [:div.header
@@ -41,7 +41,7 @@
        [:div#header-content]]
      [:div.container-fluid
       [:div#table-maker]]]
-     [:script {:src "/js/site.min.js" :type "text/javascript"}]
+     [:script {:src "/compiled/js/site.min.js" :type "text/javascript"}]
      [:script {:type "text/javascript"}
       (str "var trace_token = '" *anti-forgery-token* "';")
       "trace.colonnade.init_coll();"]]]))

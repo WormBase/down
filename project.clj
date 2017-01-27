@@ -49,31 +49,39 @@
   :minify-assets
   {:dev
    {:assets
-    {"resources/public/css/site.min.css" "resources/public/css/trace.css"}
+    {"resources/public/compiled/css/site.min.css"
+     "resources/public/css/trace.css"}
      :options {:optimization :none}}
    :prod
    {:assets
-    {"resources/public/css/site.min.css" "resources/public/css/trace.css"}
+    {"resources/public/compiled/css/site.min.css"
+     "resources/public/css/trace.css"}
    :options {:optimization :advanced}}}
   :cljsbuild
   {:builds
    {:dev
     {:source-paths ["src"]
      :compiler
-     {:optimizations :none
+     {:optimizations :whitespace
       :pretty-print true
-      :output-to "resources/public/js/site.min.js"
-      :output-dir "resources/public/js/out-dev"
-      :source-map "resources/public/js/site.js.map"}}
+      :asset-path "compiled/js/out-dev"
+      :output-dir "resources/public/compiled/js/out-dev"
+      :output-to "resources/public/compiled/js/site.min.js"
+      :source-map "resources/public/compiled/js/site.js.map"}}
     :prod
     {:source-paths ["src"]
      :compiler
      {:optimizations :simple
       :verbose false
       :pretty-print false
-      :output-to "resources/public/js/site.min.js"
-      :output-dir "resources/public/js/out"
-      :source-map "resources/public/js/site.js.map"}}}}
+      :asset-path "compiled/js/out-prod"
+      :output-dir "resources/public/compiled/js/out-prod"
+      :output-to "resources/public/compiled/js/site.min.js"
+      :source-map "resources/public/compiled/js/site.js.map"}}}}
+  :clean-targets ^{:protect false} [:target-path
+                                    :compile-path
+                                    "resources/public/compiled/css"
+                                    "resources/public/compiled/js"]
   :main ^:skip-aot web.core
   :ring {:init web.core/init
          :handler web.core/handler}
@@ -94,8 +102,8 @@
                               [refactor-nrepl "0.2.2"]]
                     :env {:trace-db "datomic:dev://localhost:4334/WS257"
                           :trace-require-login "0"
-                          :squiggly {:checkers [:eastwood]
-                                     :eastwood-exclude-linters [:kibit]}}
+                          :squiggly "{:checkers [:eastwood]
+                                     :eastwood-exclude-linters [:kibit]}"}
                     :repl {:plugins
                            [[cider/cider-nrepl "0.15.0-SNAPSHOT"]]
                            :dependencies
@@ -111,4 +119,4 @@
                      {:trace-db "datomic:ddb://us-east-1/WS257/wormbase"
                       :trace-port "80"
                       :trace-require-login "0"}}]
-             :uberjar [:prod {:aot :all}}])
+             :uberjar [:prod {:aot :all}]})
