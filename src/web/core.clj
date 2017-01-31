@@ -62,7 +62,7 @@
 
 (defn app-routes [db]
   (routes
-   (GET "/" [] "hello")
+   (GET "/" [] (redirect "/colonnade"))
    (friend/logout (ANY "/logout" [] (redirect "/")))
    (GET "/raw2/:class/:id" {params :params db :db}
      (trace/get-raw-obj2
