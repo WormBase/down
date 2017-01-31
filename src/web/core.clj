@@ -114,39 +114,10 @@
   (let [db (d/db datomic-conn)
         request (assoc request :db db :con datomic-conn)
         authenticate (users/make-authenticator db)
-        handle (->
-                (routes
-                 (wrap-routes (app-routes db) wrap-anti-forgery-ssl))
-                authenticate
-                wrap-edn-params-2
-                wrap-keyword-params
-                wrap-params
-                wrap-multipart-params
-                wrap-stacktrace
-                wrap-session
-                wrap-cookies)]
+        handle (-> (routes (app-routes db))
+                   authenticate
+                   wrap-edn-params-2
+                   (wrap-defaults (assoc site-defaults :session false))
+                   wrap-gzip)]
     (handle request)))
 
-(defn- get-port [env-key & {:keys [default]
-                            :or {default nil}}]
-  (let [p (env env-key)]
-    (cond
-      (integer? p) p
-      (string? p)  (parse-int p)
-      :default default)))
-
-(def trace-port (get-port :trace-port :default 8120))
-
-(def trace-ssl-port (get-port :trace-ssl-port))
-
-(defn -main
-  [& args]
-  (let [handler* handler
-        server (if trace-ssl-port
-                 (run-jetty #'handler {:port trace-port
-                                       :join? false
-                                       :ssl-port trace-ssl-port
-                                       :client-auth :want})
-                 (run-jetty #'handler {:port trace-port
-                                       :join? false}))]
-    server))
