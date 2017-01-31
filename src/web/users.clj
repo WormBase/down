@@ -58,15 +58,6 @@
    :user/name           username
    :user/bcrypt-passwd  (creds/hash-bcrypt passwd)})
 
-(defn setup-schema
-  "Setup the users' schema."
-  [uri]
-  (let [con (d/connect uri)]
-    @(d/transact con schema)
-    @(d/transact con (butlast curation-schema))
-    @(d/transact con (butlast curation-init))
-    @(d/transact con (butlast curation-fns))))
-
 (defn- flex-decode [s]
   (let [m (mod (count s) 4)
         s (if (pos? m)

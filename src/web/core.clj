@@ -99,11 +99,8 @@
    (GET "/gene-by-name/:name" {params :params}
      (get-gene-by-name db (:name params)))
    (GET "/schema" {db :db} (trace/get-schema db))
-   (POST "/transact" req
-     (friend/authorize #{::user}
-                       (d/transact (d/connect (datomic-uri)) req)))
    (context "/colonnade" req (colonnade db))
-   (route/files "/" {:root "resources/public"})))
+   (route/resources "/")))
 
 (defn init
   "Entry-point for ring web application."
