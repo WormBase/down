@@ -2,30 +2,30 @@
   (:require
    [cemerick.friend :as friend]
    [clojure.string :as str]
-   [clojure.walk :refer (postwalk)]
-   [compojure.core :refer (defroutes GET POST context wrap-routes)]
+   [clojure.walk :refer [postwalk]]
+   [compojure.core :refer [defroutes GET POST context wrap-routes]]
    [compojure.handler :as handler]
    [compojure.route :as route]
-   [datomic.api :as d :refer (db)]
-   [environ.core :refer (env)]
-   [hiccup.core :refer (html)]
-   [pseudoace.utils :refer (conj-if)]
-   [ring.util.response :refer (file-response)]
-   [web.anti-forgery :refer (*anti-forgery-token*)]
-   [web.common :refer (identity-header)]))
+   [datomic.api :as d :refer [db]]
+   [environ.core :refer [env]]
+   [hiccup.core :refer [html]]
+   [pseudoace.utils :refer [conj-if]]
+   [ring.middleware.anti-forgery :refer [*anti-forgery-token*]]
+   [ring.util.response :refer [file-response]]
+   [web.common :refer [head identity-header]]))
 
 ;;
-;; Back-end for the TrACe tree-viewer/editor.  Current TrACe uses the "obj2" protocol.
+;; Back-end for the TrACe tree-viewer/editor.
+;;Current TrACe uses the "obj2" protocol.
 ;; Any references to the original "obj" protocol are vestigial.
 ;;
 
 (declare touch-link)
 (declare obj2)
 
-(def
-  ^{:dynamic true
-    :doc "If bound to a map of :class/id -> attributes, use those attributes
-          as possible object labels."}
+(def ^{:dynamic true
+       :doc (str "If bound to a map of :class/id -> attributes, "
+                 "use those attributes as possible object labels.")}
   *class-titles* nil)
 
 (defn class-titles-for-user
@@ -44,7 +44,8 @@
          (into {}))))
 
 (defn- object-link
-  "Create a lookup-ref or labelled lookup-ref to object `v` of class `cls`."
+  "Create a lookup-ref or labelled lookup-ref to object `v`
+  of class `cls`."
   [cls v]
   (let [ref [cls (cls v)]]
     (or (some->> (get *class-titles* cls)
@@ -325,18 +326,7 @@
 (defn viewer-page [{:keys [db] :as req}]
   (html
    [:html
-    [:head
-     [:link
-      {:rel "stylesheet"
-       :href "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css"}]
-     [:link
-      {:rel "stylesheet"
-       :href "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap-theme.min.css"}]
-     [:link
-      {:rel "stylesheet"
-       :href "//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"}]
-     [:link
-      {:rel "stylesheet" :href "/compiled/css/site.min.css"}]]
+    head
     [:body
      [:div.root
       [:div.header

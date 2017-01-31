@@ -3,15 +3,14 @@
    [base64-clj.core :as base64]
    [cemerick.friend :as friend]
    [cemerick.friend.credentials :as creds]
-   [cemerick.friend.workflows :refer (make-auth)]
-   [cheshire.core :as json :refer (parse-string)]
+   [cemerick.friend.workflows :refer [make-auth]]
+   [cheshire.core :as json :refer [parse-string]]
    [clojure.string :as str]
    [datomic.api :as d]
-   [environ.core :refer (env)]
-   [friend-oauth2.util :refer (format-config-uri)]
+   [environ.core :refer [env]]
+   [friend-oauth2.util :refer [format-config-uri]]
    [friend-oauth2.workflow :as oauth2]
-   [web.curate.schema :refer (curation-schema curation-init curation-fns)]
-   [web.util :refer (allow-anonymous?)]))
+   [web.util :refer [allow-anonymous?]]))
 
 (def schema
   [{:db/id          (d/tempid :db.part/db)

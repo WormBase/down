@@ -11,25 +11,14 @@
    [pseudoace.acedump :as acedump]
    [pseudoace.utils :refer (sort-by-cached)]
    [ring.adapter.jetty :refer (run-jetty)]
-   [web.anti-forgery :refer (*anti-forgery-token*)]
-   [web.common :refer (identity-header)]
+   [ring.middleware.anti-forgery :refer (*anti-forgery-token*)]
+   [web.common :refer (head identity-header)]
    [web.db :refer (ws-version)]))
 
 (defn- page [{:keys [db] :as req}]
   (html
    [:html
-    [:head
-     [:link
-      {:rel "stylesheet"
-       :href "//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css"}]
-     [:link
-      {:rel "stylesheet"
-       :href "//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap-theme.min.css"}]
-     [:link
-      {:rel "stylesheet"
-       :href"//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"}]
-     [:link
-      {:rel "stylesheet" :href "/compiled/css/site.min.css"}]]
+    head
     [:body
      [:div.root
       [:div.header
@@ -37,10 +26,12 @@
        [:div.header-main
         [:h1#page-title "Colonnade"]
         [:img.banner
-         {:src "/img/kazannevsky.jpg" :width 130 :style "float: right"}]]
+         {:src "/img/kazannevsky.jpg"
+          :width 130
+          :style "float: right"}]]
        [:div#header-content]]
-     [:div.container-fluid
-      [:div#table-maker]]]
+      [:div.container-fluid
+       [:div#table-maker]]]
      [:script {:src "/compiled/js/site.min.js" :type "text/javascript"}]
      [:script {:type "text/javascript"}
       (str "var trace_token = '" *anti-forgery-token* "';")
