@@ -137,7 +137,6 @@
       ;; if no parent, we'll return nil
       )))
 
-
 (defn xref-obj2-attr [db ent xref maxcount]
   (let [attr       (:pace.xref/attribute xref)
         obj-ref    (:pace.xref/obj-ref xref)
@@ -199,7 +198,9 @@
 
 (defn get-raw-obj2 [ddb cls id max-out max-in txns?]
   (binding [*class-titles*
-            (class-titles-for-user ddb (:username (friend/current-authentication)))]
+            (class-titles-for-user
+             ddb
+             (:username (friend/current-authentication)))]
     (let [clid  (keyword cls "id")
           entid (->> [clid id]
                      (d/entity ddb)
@@ -218,7 +219,11 @@
          :body "Not found"}))))
 
 (defn get-raw-attr2-out [ddb entid attr txns?]
-  (let [prop (obj2-attr ddb nil nil (seq (d/datoms ddb :eavt entid attr)))
+  (let [prop (obj2-attr
+              ddb
+              nil
+              nil
+              (seq (d/datoms ddb :eavt entid attr)))
         txids (set (find-txids [prop]))]
     {:status 200
      :headers {"Content-Type" "text/plain"}
@@ -240,7 +245,9 @@
                     :txns (if txns? (get-raw-txns ddb txids))))}))
 
 (defn get-raw-attr2 [ddb entid attr-name txns?]
-  (binding [*class-titles* (class-titles-for-user ddb (:username (friend/current-authentication)))]
+  (binding [*class-titles* (class-titles-for-user
+                            ddb
+                            (:username (friend/current-authentication)))]
     (let [attr (keyword (.substring attr-name 1))]
       (if (.startsWith (name attr) "_")
         (get-raw-attr2-in ddb entid (keyword (namespace attr)
@@ -371,7 +378,8 @@
                    (:tx edn-params))
                   {:db/id (d/tempid :db.part/tx)
                    :wormbase/curator
-                   [:person/id (:wbperson (friend/current-authentication req))]}))]
+                   [:person/id
+                    (:wbperson (friend/current-authentication req))]}))]
       {:status 200
        :body (pr-str {:status "OK"
                       :ids (id-report (:db-after txr) (:tx-data txr))})})

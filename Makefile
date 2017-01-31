@@ -34,6 +34,7 @@ need-help := $(filter help,$(MAKECMDGOALS))
 help: ; @echo $(if $(need-help),,\
 	Type \'$(MAKE)$(dash-f) help\' to get help)
 
+# Targets
 
 .PHONY: cljs-build-dev
 cljs-build-dev:
