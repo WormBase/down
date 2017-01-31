@@ -17,6 +17,14 @@ APP_SHORT_NAME := down-app
 APP_ECR_REPOSITORY := ${FQ_PREFIX}/${APP_CONTAINER_NAME}
 PROXY_ECR_REPOSITORY := ${FQ_PREFIX}/${PROXY_CONTAINER_NAME}
 
+# AWS Settings
+AWS_VPC_ID := "vpc-8e0087e9"
+AWS_VPC_EC2SUBNETS := "subnet-a33a2bd5"
+AWS_VPC_SECGROUPS := "sg-2c332257"
+EC2_INSTANCE_TYPE := "m3.xlarge"
+
+# Makefile help system
+
 define print-help
         $(if $(need-help),$(warning $1 -- $2))
 endef
@@ -72,7 +80,8 @@ docker-tag:
 	@docker tag ${APP_CONTAINER_NAME}:${VERSION} ${APP_FQ_TAG}
 	@docker tag ${APP_CONTAINER_NAME}:${VERSION} ${APP_ECR_REPOSITORY}
 	@docker tag ${PROXY_CONTAINER_NAME}:${VERSION} ${PROXY_FQ_TAG}
-	@docker tag ${PROXY_CONTAINER_NAME}:${VERSION} ${PROXY_ECR_REPOSITORY}
+	@docker tag ${PROXY_CONTAINER_NAME}:${VERSION} \
+                    ${PROXY_ECR_REPOSITORY}
 
 .PHONY: docker-push-ecr
 docker-push-ecr: $(call print-help,docker-push-ecr,\
@@ -114,26 +123,23 @@ run: $(call print-help,run, \
 pre-release-test: $(call print-help,pre-release-test,\
                     "Builds and runs the application in docker, \
                      intended to be used as a release check.") \
-                  clean docker/app.jar build run
-
+                  ${DEPLOY_JAR} build run
 
 .PHONY: eb-create
 eb-create: $(call print-help,eb-create,\
              "Create an ElasticBeanStalk environment using \
               the Docker platform.")
 	@eb create down-${WS_VERSION} \
-               --region=us-east-1 \
+               --region=${AWS_DEFAULT_REGION} \
                --tags="CreatedBy=${AWS_EB_PROFILE},Role=WebService" \
-               --instance-type=m3.xlarge \
+               --instance-type=${EC2_INSTANCE_TYPE} \
                --cname="down=${WS_VERSION}" \
-               --vpc.id="vpc-8e0087e9" \
-               --vpc.ec2subnets="subnet-a33a2bd5" \
-               --vpc.securitygroups="sg-2c332257" \
+               --vpc.id=${AWS_VPC_ID} \
+               --vpc.ec2subnets=${AWS_VPC_EC2SUBNETS} \
+               --vpc.securitygroups=${AWS_VPC_SECGROUPS} \
                --single
 
 .PHONY: clean
 clean: $(call print-help,clean,"Cleans compiled state.")
 	@rm -f ${DEPLOY_JAR}
 	@lein clean
-
-
