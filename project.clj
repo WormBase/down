@@ -113,7 +113,7 @@
                               [jonase/eastwood "0.2.3"]
                               [lein-ancient "0.6.8"]
                               [refactor-nrepl "0.2.2"]]
-                    :env {:trace-db "datomic:dev://localhost:4334/WS257"
+                    :env {:wb-db-uri "datomic:dev://localhost:4334/WS257"
                           :trace-require-login "0"
                           :squiggly "{:checkers [:eastwood]
                                      :eastwood-exclude-linters [:kibit]}"}
