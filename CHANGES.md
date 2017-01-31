@@ -1,5 +1,14 @@
 # Change log
 
+## [0.2] - 2017-01-14
+ - Made compilation of assets (CSS, JavaScript) work for dev and prod
+   targets.
+ - Simplified Makefile, such that `make help` now prints documentation
+   for regular build steps only.
+ - Show WormBase data release in header.
+ - Provide cursor and tool-tip help for collapsible TrACeView sections.
+ - Bumped version of datomic to 0.9.5554 (latest version).
+
 ## [0.1] - 2017-01-13
  - Initial version.
  - Import db-prototypes sources and update dependency versions.
