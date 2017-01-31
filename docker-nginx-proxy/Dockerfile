@@ -1,6 +1,7 @@
 FROM nginx:alpine
 
-COPY resources/public /var/www/static
+COPY resources/public/compiled /var/www/static/
+COPY resources/public/img/ /var/www/static/
 COPY docker-nginx-proxy/nginx.conf /etc/nginx/nginx.conf
 
 # forward request and error logs to docker log collector

@@ -1,4 +1,44 @@
+;;; TODO
+;;;
+;;; Code:
+;;; Check for broken urls
+;;; Remove dead code
+;;; Run eastwood
+;;; Consider changing all app namespaces
+;;; Release:
+;;; Test Docker container with eb local
+;;; Re-instatate EB environment (create new?)
+;;; Delete unused ECR repositories/images
 (defproject wormbase/down "0.1-SNAPSHOT"
+  :clean-targets ^{:protect false} [:target-path
+                                    :compile-path
+                                    "resources/public/compiled/css"
+                                    "resources/public/compiled/js"]
+  :cljsbuild
+  {:builds
+   {:dev
+    {:source-paths ["src"]
+     :compiler
+     {:asset-path "compiled/js/out-dev"
+      :optimizations :whitespace
+      :output-dir "resources/public/compiled/js/out-dev"
+      :output-to "resources/public/compiled/js/site.min.js"
+      :pretty-print true
+      :source-map "resources/public/compiled/js/site.js.map"}}
+    :prod
+    {:source-paths ["src"]
+     :compiler
+     {:asset-path "compiled/js/out-prod"
+      :jar true
+      :optimizations :advanced
+      :output-dir "resources/public/compiled/js/out-prod"
+      :output-to "resources/public/compiled/js/site.min.js"
+      :pretty-print false
+      :source-map "resources/public/compiled/js/site.js.map"
+      :verbose false}}}}
+  ;; :compile-path "%s/aot-files"
+  :hooks [leiningen.cljsbuild]
+  :verbose true
   :dependencies
   [[base64-clj "0.1.1"]
    [bk/ring-gzip "0.2.1"]
@@ -22,19 +62,16 @@
    [org.omcljs/om "0.9.0"]
    [prismatic/om-tools "0.4.0"]
    [ring "1.5.1"]
+   [ring/ring-defaults "0.2.2"]
    [ring/ring-anti-forgery "1.0.1"]
    [ring/ring-jetty-adapter "1.5.1"]
    [secretary "1.2.3"]
    [wormbase/pseudoace "0.4.14"]]
+  :deploy-branches ["master"]
   :description "WormBase Query and data exploration tools"
-  :source-paths ["src"]
-  :plugins [[lein-asset-minifier "0.3.0"]
-            [lein-cljsbuild "1.1.3"]
-            [lein-environ "1.1.0"]
-            [lein-pprint "1.1.1"]
-            [lein-ring "0.9.7"]]
+  :dev-dependencies [[acyclic/squiggly-clojure "0.1.6"]
+                     [ring/ring-devel "1.5.0"]]
   :javac-options ["-target" "1.8" "-source" "1.8"]
-  :min-lein-version "2.0.0"
   :jvm-opts
   ["-Xmx6G"
    ;; same GC options as the transactor,
@@ -45,7 +82,7 @@
    ;; Uncomment to prevent missing trace (HotSpot optimisation)
    ;; "-XX:-OmitStackTraceInFastThrow"
    ]
-  :resource-paths ["resources"]
+  :min-lein-version "2.6.1"
   :minify-assets
   {:dev
    {:assets
@@ -57,36 +94,12 @@
     {"resources/public/compiled/css/site.min.css"
      "resources/public/css/trace.css"}
    :options {:optimization :advanced}}}
-  :cljsbuild
-  {:builds
-   {:dev
-    {:source-paths ["src"]
-     :compiler
-     {:optimizations :whitespace
-      :pretty-print true
-      :asset-path "compiled/js/out-dev"
-      :output-dir "resources/public/compiled/js/out-dev"
-      :output-to "resources/public/compiled/js/site.min.js"
-      :source-map "resources/public/compiled/js/site.js.map"}}
-    :prod
-    {:source-paths ["src"]
-     :compiler
-     {:optimizations :simple
-      :verbose false
-      :pretty-print false
-      :asset-path "compiled/js/out-prod"
-      :output-dir "resources/public/compiled/js/out-prod"
-      :output-to "resources/public/compiled/js/site.min.js"
-      :source-map "resources/public/compiled/js/site.js.map"}}}}
-  :clean-targets ^{:protect false} [:target-path
-                                    :compile-path
-                                    "resources/public/compiled/css"
-                                    "resources/public/compiled/js"]
   :main ^:skip-aot web.core
-  :ring {:init web.core/init
-         :handler web.core/handler}
-  :dev-dependencies [[acyclic/squiggly-clojure "0.1.6"]
-                     [ring/ring-devel "1.5.0"]]
+  :plugins [[lein-asset-minifier "0.3.0"]
+            [lein-cljsbuild "1.1.3"]
+            [lein-environ "1.1.0"]
+            [lein-pprint "1.1.1"]
+            [lein-ring "0.9.7"]]
   :profiles {:datomic-pro
              [{:dependencies [[com.datomic/datomic-pro "0.9.5554"
                                :exclusions [joda-time]]]}]
@@ -116,7 +129,15 @@
              :prod [:ddb
                     :datomic-pro
                     {:env
-                     {:trace-db "datomic:ddb://us-east-1/WS257/wormbase"
-                      :trace-port "80"
+                     {:wb-db-uri "datomic:ddb://us-east-1/WS257/wormbase"
                       :trace-require-login "0"}}]
-             :uberjar [:prod {:aot :all}]})
+             :uberjar
+             {:aot :all
+              :hooks [minify-assets.plugin/hooks]
+              :omit-source true
+              :prep-tasks ["compile" ["cljsbuild" "once" "prod"]]}}
+  :resource-paths ["resources"]
+  :ring {:init web.core/init
+         :handler web.core/handler}
+  :source-paths ["src"]
+  :target-path "target/%s/")
