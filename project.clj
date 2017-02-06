@@ -109,14 +109,12 @@
                  :exclusions [joda-time]]]}]
              :dev [:ddb
                    :datomic-pro
-                   {:plugins [[cider/cider-nrepl "0.15.0-SNAPSHOT"]
-                              [jonase/eastwood "0.2.3"]
-                              [lein-ancient "0.6.8"]
-                              [refactor-nrepl "0.2.2"]]
+                   {:plugins [[jonase/eastwood "0.2.3"
+		               :exclusions [org.clojure/clojure]]
+                              [lein-ancient "0.6.8"]]
                     :env {:wb-db-uri "datomic:dev://localhost:4334/WS257"
                           :trace-require-login "0"
-                          :squiggly "{:checkers [:eastwood]
-                                     :eastwood-exclude-linters [:kibit]}"}
+                          :squiggly "{:checkers [:eastwood]}"}
                     :repl {:plugins
                            [[cider/cider-nrepl "0.15.0-SNAPSHOT"]]
                            :dependencies

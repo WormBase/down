@@ -1,6 +1,6 @@
 SHELL := /bin/sh
 APP_CONTAINER_NAME := wormbase/down
-PROXY_CONTAINER_NAME := ${APP_CONTAINER_NAME}_nginx-proxy
+APP_SHORT_NAME := down
 VERSION ?= $(shell git describe --always --abbrev=0 --tags)
 EBX_CONFIG = .ebextensions/.config
 DB_URI ?= $(shell sed -rn 's|value:\s+(datomic.*)|\1|p' ${EBX_CONFIG} | \
@@ -12,10 +12,7 @@ DEPLOY_JAR := docker/app.jar
 WB_ACC_NUM := 357210185381
 FQ_PREFIX := ${WB_ACC_NUM}.dkr.ecr.us-east-1.amazonaws.com
 APP_FQ_TAG := ${FQ_PREFIX}/${APP_CONTAINER_NAME}:${VERSION}
-PROXY_FQ_TAG := ${FQ_PREFIX}/${PROXY_CONTAINER_NAME}:${VERSION}
-APP_SHORT_NAME := down-app
 APP_ECR_REPOSITORY := ${FQ_PREFIX}/${APP_CONTAINER_NAME}
-PROXY_ECR_REPOSITORY := ${FQ_PREFIX}/${PROXY_CONTAINER_NAME}
 
 # AWS Settings
 AWS_VPC_ID := "vpc-8e0087e9"
@@ -53,14 +50,9 @@ ${DEPLOY_JAR}: cljs-build-prod \
 print-ws-version:
 	@echo ${WS_VERSION}
 
-.PHONY: build-nginx-proxy
-build-nginx-proxy:
-	@docker build \
-		-f ./docker-nginx-proxy/Dockerfile \
-		-t ${PROXY_CONTAINER_NAME}:${VERSION} .
-
-.PHONY: build-app
-build-app:
+.PHONY: docker-build
+docker-build: $(call print-help,docker-build,\
+                "Build application docker container")
 	@docker build -t ${APP_CONTAINER_NAME}:${VERSION} \
 		--build-arg uberjar_path=app.jar \
 		--build-arg \
@@ -72,17 +64,10 @@ build-app:
 docker-ecr-login:
 	@eval $(shell aws ecr get-login)
 
-.PHONY: build
-build: $(call print-help,build,"Builds all docker containers") \
-	build-nginx-proxy build-app
-
 .PHONY: docker-tag
 docker-tag:
 	@docker tag ${APP_CONTAINER_NAME}:${VERSION} ${APP_FQ_TAG}
 	@docker tag ${APP_CONTAINER_NAME}:${VERSION} ${APP_ECR_REPOSITORY}
-	@docker tag ${PROXY_CONTAINER_NAME}:${VERSION} ${PROXY_FQ_TAG}
-	@docker tag ${PROXY_CONTAINER_NAME}:${VERSION} \
-                    ${PROXY_ECR_REPOSITORY}
 
 .PHONY: docker-push-ecr
 docker-push-ecr: $(call print-help,docker-push-ecr,\
@@ -91,28 +76,24 @@ docker-push-ecr: $(call print-help,docker-push-ecr,\
                  docker-tag \
                  docker-ecr-login
 	@docker push ${APP_FQ_TAG}
-	@docker push ${PROXY_FQ_TAG}
 
-.PHONY: run-app
-run-app:
+.PHONY: docker-run
+docker-run:
 	@docker run \
 		--name ${APP_SHORT_NAME} \
 		--publish 3000:3000 \
 		--detach \
 		-e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
 		-e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
-		-e TRACE_DB=${DB_URI} \
-		-e TRACE_REQUIRE_LOGIN="0" \
+		-e WB_DB_URI=${DB_URI} \
+		-e WB_REQUIRE_LOGIN="0" \
 		 ${APP_CONTAINER_NAME}:${VERSION}
 
-.PHONY: run-nginx-proxy
-run-nginx-proxy:
-	@docker run \
-		--link ${APP_SHORT_NAME} \
-	        --name nginx-proxy \
-		--detach \
-		-p 80:80 \
-		${PROXY_CONTAINER_NAME}:${VERSION}
+.PHONY: docker-clean
+docker-clean: $(call print-help,docker-clean,\
+               "Stops and removes arunning docker application container.")
+	@docker stop down
+	@docker rm down
 
 .PHONY: run
 run: $(call print-help,run, \
