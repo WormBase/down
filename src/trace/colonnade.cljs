@@ -7,10 +7,10 @@
    [secretary.core
     :as secretary
     :include-macros true
-    :refer-macros (defroute)]
+    :refer-macros [defroute]]
    [goog.dom :as gdom]
    [goog.events :as events]
-   [trace.utils :refer (edn-xhr edn-xhr-post conj-if process-schema)])
+   [trace.utils :refer [edn-xhr edn-xhr-post conj-if process-schema]])
   (:import
    [goog History]
    [goog.history EventType]))

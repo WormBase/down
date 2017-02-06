@@ -1,5 +1,5 @@
 (ns web.util
-  [:require [environ.core :refer [env]]])
+  (:require [environ.core :refer [env]]))
 
 (defn allow-anonymous? []
   (let [val  (env :trace-require-login)]
