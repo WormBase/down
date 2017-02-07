@@ -61,15 +61,13 @@
    [org.omcljs/om "0.9.0"]
    [prismatic/om-tools "0.4.0"]
    [ring "1.5.1"]
-   [ring/ring-defaults "0.2.2"]
+   [ring/ring-defaults "0.2.3"]
    [ring/ring-anti-forgery "1.0.1"]
    [ring/ring-jetty-adapter "1.5.1"]
    [secretary "1.2.3"]
    [wormbase/pseudoace "0.4.14"]]
   :deploy-branches ["master"]
   :description "WormBase Query and data exploration tools"
-  :dev-dependencies [[acyclic/squiggly-clojure "0.1.6"]
-                     [ring/ring-devel "1.5.0"]]
   :javac-options ["-target" "1.8" "-source" "1.8"]
   :jvm-opts
   ["-Xmx6G"
@@ -110,15 +108,11 @@
                    :datomic-pro
                    {:plugins [[jonase/eastwood "0.2.3"
 		               :exclusions [org.clojure/clojure]]
-                              [lein-ancient "0.6.8"]]
+                              [lein-ancient "0.6.8"]
+                              [ring/ring-devel "1.5.1"]]
                     :env {:wb-db-uri "datomic:dev://localhost:4334/WS257"
                           :trace-require-login "0"
                           :squiggly "{:checkers [:eastwood]}"}
-                    :repl {:plugins
-                           [[cider/cider-nrepl "0.15.0-SNAPSHOT"]]
-                           :dependencies
-                           [[acyclic/squiggly-clojure "0.1.6"]
-                            [org.clojure/tools.nrepl "0.2.12"]]}
                     :ring {:init web.core/init
                            :handler web.core/handler
                            :nrepl {:start? true}
