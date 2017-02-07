@@ -27,6 +27,7 @@ These web applications are written in Clojure(Script).
 ```bash
 lein clean && \
 lein cljsbuild once dev && \
+lein minify-assets dev && \
 lein ring server-headless
 ```
 
