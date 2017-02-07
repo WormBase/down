@@ -37,7 +37,6 @@
       :source-map "resources/public/compiled/js/site.js.map"
       :verbose false}}}}
   ;; :compile-path "%s/aot-files"
-  :hooks [leiningen.cljsbuild]
   :verbose true
   :dependencies
   [[base64-clj "0.1.1"]
