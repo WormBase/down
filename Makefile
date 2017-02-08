@@ -105,7 +105,9 @@ run: $(call print-help,run, \
 pre-release-test: $(call print-help,pre-release-test,\
                     "Builds and runs the application in docker, \
                      intended to be used as a release check.") \
-                  ${DEPLOY_JAR} build run
+                  clean \
+                  ${DEPLOY_JAR} \
+                  docker-build docker-run
 
 .PHONY: eb-create
 eb-create: $(call print-help,eb-create,\
