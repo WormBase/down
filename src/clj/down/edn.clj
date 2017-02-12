@@ -1,4 +1,4 @@
-(ns web.edn
+(ns down.edn
   (:require [clojure.edn :as edn]
             [datomic.api :as d]))
 

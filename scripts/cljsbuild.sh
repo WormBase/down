@@ -1,6 +1,6 @@
 #!/bin/sh
 
 target="$1"
-lein cljsbuild once "${target}"
-lein minify-assets "${target}"
+lein with-profile "+${target}" cljsbuild once "${target}"
+lein with-profile "+${target}" minify-assets "${target}"
 

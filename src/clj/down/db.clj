@@ -1,4 +1,4 @@
-(ns web.db
+(ns down.db
   (:require
    [clojure.string :as str]
    [datomic.api :as d]

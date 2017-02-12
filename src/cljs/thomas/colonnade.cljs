@@ -1,18 +1,16 @@
-(ns trace.colonnade
+(ns thomas.colonnade
   (:require
    [cljs.reader :as reader]
    [clojure.string :as str]
-   [om.core :as om :include-macros true]
-   [om-tools.dom :as dom :include-macros true]
-   [secretary.core
-    :as secretary
-    :include-macros true
-    :refer-macros [defroute]]
    [goog.dom :as gdom]
    [goog.events :as events]
-   [trace.utils :refer [edn-xhr edn-xhr-post conj-if process-schema]])
+   [om-tools.dom :as dom :include-macros true]
+   [om.core :as om :include-macros true]
+   [secretary.core :as secretary :include-macros true :refer-macros [defroute]]
+   [thomas.utils :refer [edn-xhr edn-xhr-post conj-if process-schema]])
   (:import
    [goog History]
+   [goog.dom query]
    [goog.history EventType]))
 
 (enable-console-print!)
@@ -95,7 +93,7 @@
               (om/update!
                col
                :attribute (reader/read-string (.. e -target -value))))}
-           (dom/option nil)
+           (dom/option nil {} "Select entity:")
            (concat
             #_(for [type [:db.type/string
                           :db.type/long
@@ -105,9 +103,12 @@
                           :db.type/double
                           :db.type/boolean]]
                 (dom/option #js {:value type} (str type)))
-            (for [ci (:classes schema) :when (not (:pace/is-hash ci))]
-              (dom/option #js {:value (:db/ident ci)}
-                          (:pace/identifies-class ci))))))))))
+            (for [ci (sort-by #(namespace (:db/ident %))
+                              (:classes schema))
+                  :when (not (:pace/is-hash ci))]
+              (let [value (:db/ident ci)]
+                #_(:pace/identifies-class ci)
+                (dom/option #js {:value value} (namespace value)))))))))))
   
 
 (defn from-menu [col owner]
@@ -224,9 +225,7 @@
    (om/build input-text col {:opts {:key :constrain}})
 
    (= attribute :enum)
-   (om/build enum-constraint col)
-
-   ))
+   (om/build enum-constraint col)))
 
 (defn column-def-view [col owner]
   (reify
@@ -282,13 +281,13 @@
 (defn get-query [columns schema]
   (reduce
    (fn [{:keys [find where rules]} [k col]]
-     (let [via      (:via col)
+     (let [via (:via col)
            via-xref (if via
                       (if (= (.indexOf (name via) "_") 0)
                         (keyword
                          (namespace via)
                          (.substring (name via) 1))))
-           vs   ((:attrs-by-ident schema) via)
+           vs ((:attrs-by-ident schema) via)
            attr (:attribute col)]
        {:find
         (conj-if find
@@ -314,7 +313,7 @@
          (if-let [txn (:in-txn col)]
            (let [txn (js/parseInt txn)]
              (if-not (js/isNaN txn)
-               [[(list 'web.trace/in-transaction '?log (js/parseInt txn))
+               [[(list 'thomas.trace/in-transaction '?log (js/parseInt txn))
                  [(symbol (str "?" k)) '...]]])))
          (if via
            (if (:required col)
@@ -529,7 +528,9 @@
                     :error (if (re-find #"TimeoutException" response-text)
                              (str "Query timed out, consider "
                                   "retrying with longer timeout?")
-                             (str "Error " status))
+                             (if (= status 400)
+                               response-text
+                               (str "Error " status)))
                     :results nil)))))))]
     (reify
       om/IInitState
@@ -573,7 +574,7 @@
               (dom/div
                {:class "panel panel-default"}
                (dom/div
-                {:class "panel-heading"
+                {:class "panel-heading toggle"
                  :on-click #(om/update-state! owner :show-export not)}
                 "Export")
                (dom/div
@@ -586,7 +587,7 @@
                  (dom/input
                   {:type "hidden"
                    :name "__anti-forgery-token"
-                   :value js/trace_token})
+                   :value js/csrf_token})
                  (dom/input
                   {:type "hidden"
                    :name "columns"
@@ -623,7 +624,8 @@
                   (dom/option {:value "csv"} "CSV")
                   (dom/option {:value "keyset"} ".ace keyset")
                   (dom/option {:value "ace"} ".ace dump")
-                  (dom/option {:value "acets"} ".ace with timestamps"))
+                  (dom/option {:value "acets"} ".ace with timestamps")
+                  (dom/option {:value "json"} "JSON"))
 
                  (dom/select
                   {:name "keyset-column"
@@ -709,17 +711,18 @@
 
             (dom/button
              {:on-click
-              #(om/transact! app
-                             (fn [{:keys [columns col-seed] :as app}]
-                               (let [cid (inc col-seed)]
-                                 (assoc app
-                                        :columns
-                                        (assoc columns
-                                               (str "col" cid)
-                                               (assoc column-template
-                                                      :name (str "Column " cid)
-                                                      :from "col1"))
-                                        :col-seed cid))))}
+              #(om/transact!
+                app
+                (fn [{:keys [columns col-seed] :as app}]
+                  (let [cid (inc col-seed)]
+                    (assoc app
+                           :columns
+                           (assoc columns
+                                  (str "col" cid)
+                                  (assoc column-template
+                                         :name (str "Column " cid)
+                                         :from "col1"))
+                           :col-seed cid))))}
              "New column")
 
             (dom/button
@@ -733,7 +736,6 @@
                               {:query q
                                :qid (str "query" (swap! query-seed inc))
                                :columns cols})))}
-             
              "Run query")
 
             (dom/form {:class "form-inline"}
@@ -747,7 +749,16 @@
             (if-let [runner (:runner app)]
               (om/build query-runner runner {:key :qid}))))))))
 
+(defn handle-logo-link []
+  (let [home-link (aget (query "a.logo-link") 0)]
+    (events/listen
+     home-link goog.events.EventType.CLICK
+     (fn [evt]
+       (.preventDefault evt)
+       (set! (.-href home-link) "#")))))
+
 (defn init-coll []
+  (handle-logo-link)
   (om/root colonnade-view
            app-state
            {:target (gdom/getElement "table-maker")}))

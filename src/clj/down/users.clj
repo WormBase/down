@@ -1,4 +1,4 @@
-(ns web.users
+(ns down.users
   (:require
    [base64-clj.core :as base64]
    [cemerick.friend :as friend]
@@ -7,10 +7,10 @@
    [cheshire.core :as json :refer [parse-string]]
    [clojure.string :as str]
    [datomic.api :as d]
+   [down.util :refer [allow-anonymous?]]
    [environ.core :refer [env]]
    [friend-oauth2.util :refer [format-config-uri]]
-   [friend-oauth2.workflow :as oauth2]
-   [web.util :refer [allow-anonymous?]]))
+   [friend-oauth2.workflow :as oauth2]))
 
 (def schema
   [{:db/id          (d/tempid :db.part/db)
@@ -115,12 +115,12 @@
     :access-token-parsefn goog-token-parse
     :credential-fn (partial goog-credential-fn db)}))
 
-(defn authenticate* [db]
-  (let [allow-anon? (allow-anonymous?)]
-    #(friend/authenticate
-      %
-      {:allow-anon? allow-anon?
-       :workflows [(make-workflow db client-config uri-config)]})))
-
-(defn make-authenticator [db]
-  (authenticate* db))
+(defn wrap-authentication [handler]
+  (fn [request]
+    (let [allow-anon? (allow-anonymous?)
+          db (:db request)
+          auth (friend/authenticate
+                handler
+                {:allow-anon? allow-anon?
+                 :workflows [(make-workflow db client-config uri-config)]})]
+      (auth request))))

@@ -11,7 +11,29 @@ div.header {
     box-sizing: border-box;
 }
 
-div.header-identity {
+div.header-identity div {
+    display: block;
+}
+
+.help {
+    cursor:normal;
+}
+
+.help:hover {
+    cursor: help;
+}
+
+.toggle {
+    font-weight: bold;
+    cursor: none;
+}
+
+.toggle:hover {
+    cursor: pointer;
+}
+
+.toggle th span {
+    display: inline-block;
 }
 
 div#header-content input[type="checkbox"] {
@@ -171,6 +193,23 @@ div.history-box {
     border: solid black 1px;
 }
 
+/* .table-striped > tbody > tr:nth-child(even) { */
+/*     background-color: #bacae0; */
+/* } */
+
+#trace a.logo-link, label.providence, .txn {
+    cursor: pointer;
+}
+
+.txn {
+    text-align: right;
+    font-size: 7pt;
+}
+
+#colonnade a.logo-link {
+    cursor: none;
+}
+		
 table.history-table {
     margin-bottom: 0px;
     font-size: 8pt;
@@ -184,6 +223,19 @@ table.history-table td {
 div.trace-item {
     display: -webkit-flex;
     display: flex;
+}
+
+table.trace-tree tbody .group-separator {
+    background-color: #80a2b8;
+}
+
+table.trace-tree tbody tr.group-separator span.btn,
+table.trace-tree tbody tr.group-separator .navbar-txt {
+    padding-left: 3px;
+}
+
+tr.group-separator:hover {
+    font-weight: bold;
 }
 
 td.prop-name {

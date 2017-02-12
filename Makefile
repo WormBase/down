@@ -52,7 +52,8 @@ print-ws-version:
 
 .PHONY: docker-build
 docker-build: $(call print-help,docker-build,\
-                "Build application docker container")
+                "Build application docker container") \
+               clean ${DEPLOY_JAR}
 	@docker build -t ${APP_CONTAINER_NAME}:${VERSION} \
 		--build-arg uberjar_path=app.jar \
 		--build-arg \
@@ -105,8 +106,6 @@ run: $(call print-help,run, \
 pre-release-test: $(call print-help,pre-release-test,\
                     "Builds and runs the application in docker, \
                      intended to be used as a release check.") \
-                  clean \
-                  ${DEPLOY_JAR} \
                   docker-build docker-run
 
 .PHONY: eb-create

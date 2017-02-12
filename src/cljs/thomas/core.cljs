@@ -1,16 +1,19 @@
-(ns trace.core
+(ns thomas.core
   (:require
    [cljs-time.coerce :as tc]
    [cljs-time.core :as time]
    [cljs-time.format :as tf]
    [clojure.string :as str]
    [goog.dom :as gdom]
+   [goog.string :as gstr]
    [om-tools.dom :as dom :include-macros true]
    [om.core :as om :include-macros true]
-   [secretary.core :as secretary :refer-macros (defroute)]
-   [trace.utils :refer (edn-xhr edn-xhr-post conj-if process-schema)]))
+   [secretary.core :as secretary :refer-macros [defroute]]
+   [thomas.utils :refer [edn-xhr edn-xhr-post conj-if process-schema]]))
 
 (enable-console-print!)
+
+(def unesc-str (comp gstr/unescapeEntities str))
 
 (def app-state (atom {:props []
                       :mode {:loading true
@@ -83,15 +86,16 @@
                   (for [i missing]
                     (str "id=" i))))
            (fn [resp]
-             (om/transact! app :txns #(merge %  (->> (for [t (:txns resp)]
-                                                       [(:db/id t) t])
-                                                     (into {})))))))))))
+             (om/transact! app :txns #(merge % (->> (for [t (:txns resp)]
+                                                      [(:db/id t) t])
+                                                    (into {})))))))))))
 
 (defn- props->state [props]
-  (vec (for [p props :let [v (:values p)]]
+  (vec (for [p props
+             :let [v (:values p)]]
          (assoc p
-           :collapsed (> (or (:count p)
-                             (count v)) 1)
+                :collapsed (> (or (:count p)
+                                  (count v)) 1)
            :values (vec
                     (for [{:keys [txn val id]} v]
                       {:txn txn
@@ -124,6 +128,19 @@
       (TempIDObj. part (swap! seed dec)))))
 
 (declare tree-view)
+
+(defn collapse-icon-class
+  [v]
+  (str "glyphicon glyphicon-collapse-"
+       (if v
+         "up"
+         "down")))
+
+(defn visibility
+  [v]
+  {:visibility (if v
+                 "visible"
+                 "hidden")})
 
 (defn display
   [show]
@@ -382,21 +399,17 @@
 
 
          (dom/span
-          {:style {:visibility (if (and (not create?)
-                                        (= checked vname)
-                                        (not= (first candidates) vname))
-                                 "visible"
-                                 "hidden")}}
-          (dom/span
-           {:style {:color "red"}}
-           " Doesn't exist ")
-          (dom/button
-           {:on-click (fn [_]
-                        (om/update! vh :edit [class vname :create])
-                        (om/set-state! owner :editing false))}
-           "Create"))
-
-            ))))))
+          {:style (visibility (and (not create?)
+                                   (= checked vname)
+                                   (not= (first candidates) vname)))})
+         (dom/span
+          {:style {:color "red"}}
+          " Doesn't exist ")
+         (dom/button
+          {:on-click (fn [_]
+                       (om/update! vh :edit [class vname :create])
+                       (om/set-state! owner :editing false))}
+          "Create")))))))
 
 (defn curator-name [c]
   (or (:person/standard-name c)
@@ -411,7 +424,7 @@
     om/IRenderState
     (render-state [_ {:keys [history hdata]}]
      (let [txn-map (om/observe owner (txns))]
-      (dom/span
+      (dom/span 
        {:class "txn"
         :on-click (fn [_]
                     (when (and (not history)
@@ -423,12 +436,12 @@
                     (om/update-state! owner :history not))}
        (if history
          (dom/div {:class "x-history-box-holder"}
-            (dom/div {:class "history-box"}
+            (dom/div {:class "history-box"} 
                (if hdata
                  (let [txmap (->> (map (juxt :db/id identity) (:txns hdata))
                                   (into {}))]
                    (dom/table {:class "history-table table table-striped"}
-                    (dom/thead
+                    (dom/thead 
                      (dom/tr
                       (for [c ["Date" "Action" "Value" "Who?" "Txn"]]
                         (dom/th c))))
@@ -444,9 +457,11 @@
                                  who  (if-let [c (:wormbase/curator txn)]
                                         (curator-name c)
                                         (:importer/ts-name txn))
-                                 txln (dom/a {:href (str "/curate/txns?t=" txid)
-                                              :target "_new"}
-                                             (dom/i {:class "fa fa-file-text-o"}))]]
+                                 ;; MGR 2017-02-10 - Disabled for now
+                                 ;; {:href (str "/txns?t=" txid) :target "_new"}
+                                 txln (dom/a
+                                       {:href (str "#disabled-feature")}
+                                       (dom/i {:class "fa fa-file-text-o"}))]]
                        (if (= (count added) (count retracted) 1)
                          (dom/tr
                           (dom/td time)
@@ -473,7 +488,7 @@
          (if txn
            (if-let [txn-data (txn-map txn)]
              (str (->> (:db/txInstant txn-data)
-                      (format-local-time))
+                       (format-local-time))
                   (if-let [c (:wormbase/curator txn-data)]
                     (str " (" (curator-name c) ")")
                     (if-let [d (:importer/ts-name txn-data)]
@@ -492,85 +507,83 @@
 
     om/IRender
     (render [_]
-     (let [mode      (om/observe owner (mode))
-           txnData   (:txnData mode)
-           edit-mode (and (:editing mode)
-                          ;; blacklist primary entity IDs
-                          (not (= (name key) "id")))]
-      (dom/div
-       {:class (if (and edit (not= edit val))
-                  "trace-item edited"
-                  "trace-item")}
+      (let [mode (om/observe owner (mode))
+            txnData (:txnData mode)
+            edit-mode (and (:editing mode)
+                           ;; blacklist primary entity IDs
+                           (not (= (name key) "id")))]
+        (dom/div
+         {:class (if (and edit (not= edit val))
+                   "trace-item edited"
+                   "trace-item")}
 
-       (if (and edit-mode (not comp?))
-         (dom/button
-          {:tabIndex -1
-           :on-click #(om/transact! val-holder :remove not)}
-          (dom/i {:class "fa fa-eraser"})))
+         (if (and edit-mode (not comp?))
+           (dom/button
+            {:tabIndex -1
+             :on-click #(om/transact! val-holder :remove not)}
+            (dom/i {:class "fa fa-eraser"})))
 
 
 
-       (dom/span
-        {:class "trace-item-content"
-         :style (if remove
-                  {:text-decoration "line-through"
-                   :text-decoration-color "red"})}
-        (cond
-         comp?
-         (om/build tree-view val-holder {:opts {:primary-ns (component-ns key)}})
+         (dom/span
+          {:class "trace-item-content"
+           :style (if remove
+                    {:text-decoration "line-through"
+                     :text-decoration-color "red"})}
+          (cond
+            comp?
+            (om/build tree-view val-holder {:opts {:primary-ns (component-ns key)}})
 
-         (or (sequential? val)
-             (sequential? edit)
-             class)
-         (if edit-mode
-           (om/build ref-edit val-holder
-                     {:opts {:class class}})
-           (let [[class id title] val
-                 uri (str "/view/" (namespace class) "/" id)]
-             (dom/a {:href uri
-                     :onClick (fn [e]
-                                (.preventDefault e)
-                                (.stopPropagation e)
-                                (.pushState js/window.history
-                                            #js {:url uri}
-                                            id
-                                            uri)
-                                (secretary/dispatch! uri))}
-                    (str (or title id)))))
+            (or (sequential? val)
+                (sequential? edit)
+                class)
+            (if edit-mode
+              (om/build ref-edit val-holder
+                        {:opts {:class class}})
+              (let [[class id title] val
+                    uri (str "/view/" (namespace class) "/" id)]
+                (dom/a {:href uri
+                        :onClick (fn [e]
+                                   (.preventDefault e)
+                                   (.stopPropagation e)
+                                   (.pushState js/window.history
+                                               #js {:url uri}
+                                               id
+                                               uri)
+                                   (secretary/dispatch! uri))}
+                       (str (or title id)))))
 
-         (= type :db.type/long)
-         (if edit-mode
-           (om/build int-edit val-holder)
-           (dom/span (str val)))
+            (= type :db.type/long)
+            (if edit-mode
+              (om/build int-edit val-holder)
+              (dom/span (str val)))
 
-         (= type :db.type/boolean)
-         (if edit-mode
-           (om/build boolean-edit val-holder)
-           (dom/span (str val)))
+            (= type :db.type/boolean)
+            (if edit-mode
+              (om/build boolean-edit val-holder)
+              (dom/span (str val)))
 
-         (and (= type :db.type/ref))
-         (if edit-mode
-           (om/build
-            enum-edit
-            val-holder
-            {:opts {:tns (str (namespace key) "." (name key))}})
-           (dom/span (name val)))
+            (and (= type :db.type/ref))
+            (if edit-mode
+              (om/build
+               enum-edit
+               val-holder
+               {:opts {:tns (str (namespace key) "." (name key))}})
+              (dom/span (name val)))
 
-         (= type :db.type/string)
-         (if edit-mode
-           (om/build text-edit val-holder)
-           (dom/span (str val)))
+            (= type :db.type/string)
+            (if edit-mode
+              (om/build text-edit val-holder)
+              (dom/span (str val)))
 
-         (= type :db.type/instant)
-         (dom/span (format-local-time val))
+            (= type :db.type/instant)
+            (dom/span (format-local-time val))
 
-         :default
-         (dom/span (str val))))
+            :default
+            (dom/span (str val))))
 
-       (if (and txnData
-                (not comp?))
-         (om/build txn-view val-holder {:opts {:key key :entid entid}}))
-       )))))
+         (if (and txnData (not comp?))
+           (om/build txn-view val-holder {:opts {:key key :entid entid}})))))))
 
 (defn list-view [data owner {:keys [entid]}]
   (reify
@@ -579,55 +592,60 @@
       (let [mode (om/observe owner (mode))
             vcnt (or (:count data)
                      (count (:values data)))]
-          (dom/span {:className "values-holder"}
-                    (dom/button
-                     {:onClick (fn [_]
-                                 (om/transact! data :collapsed not)
-                                 (if (and (not (:collapsed @data))
-                                          (empty? (:values @data)))
-                                   (edn-xhr
-                                    (str "/attr2/" entid "/" (:key data))
-                                    (fn [resp]
-                                      (let [txn-map (->> (for [t (:txns resp)]
-                                                        [(:db/id t) t])
-                                                      (into {}))]
-                                        (om/transact!
-                                         (txns)
-                                         #(merge % txn-map))
-                                        (om/update!
-                                         data
-                                         :values
-                                         (vec
-                                          (for [v (:values resp)]
-                                            (assoc v
-                                              :txn (:txn v)
-                                              :val (if (:comp resp)
-                                                     (props->state (:val v))
-                                                     (:val v))))))
-                                        (if (:txnData @mode)
-                                          (fetch-missing-txns
-                                           (om/root-cursor app-state))))))))
-                      :className "collapse-button"
-                      :style (display (> vcnt 1))}
-                     (if (:collapsed data)
-                       "+"
-                       "-"))
-                    (cond
-                     (:collapsed data)
-                     (dom/div nil (str vcnt " nodes"))
+        (dom/span
+         {:className "values-holder"}
+         (dom/button
+          {:onClick
+           (fn [_]
+             (om/transact! data :collapsed not)
+             (if (and (not (:collapsed @data))
+                      (empty? (:values @data)))
+               (edn-xhr
+                (str "/attr2/" entid "/" (:key data))
+                (fn [resp]
+                  (let [txn-map (->> (for [t (:txns resp)]
+                                       [(:db/id t) t])
+                                     (into {}))]
+                    (om/transact!
+                     (txns)
+                     #(merge % txn-map))
+                    (om/update!
+                     data
+                     :values
+                     (vec
+                      (for [v (:values resp)]
+                        (assoc v
+                               :txn (:txn v)
+                               :val (if (:comp resp)
+                                      (props->state (:val v))
+                                      (:val v))))))
+                    (if (:txnData @mode)
+                      (fetch-missing-txns
+                       (om/root-cursor app-state))))))))
+           :className "collapse-button"
+           :style (display (> vcnt 1))}
+          (dom/span
+           {:class (collapse-icon-class (not (:collapsed data)))}))
+          ;; (if (:collapsed data)
+          ;;   "+"
+          ;;   "-"))
+         (cond
+           (:collapsed data)
+           (dom/div nil (str vcnt " nodes"))
 
-                     (empty? (:values data))
-                     (dom/img {:src "/img/spinner_24.gif"})
+           (empty? (:values data))
+           (dom/img {:src "/img/spinner_24.gif"})
 
-                     :default
-                     (dom/div {:class "values-list"}
-                              (for [v (:values data)]
-                                (om/build item-view v
-                                  {:opts {:key   (:key data)
-                                          :type  (:type data)
-                                          :class (:class data)
-                                          :comp? (:comp data)
-                                          :entid entid}})))))))))
+           :default
+           (dom/div
+            {:class "values-list"}
+            (for [v (:values data)]
+              (om/build item-view v
+                        {:opts {:key (:key data)
+                                :type (:type data)
+                                :class (:class data)
+                                :comp? (:comp data)
+                                :entid entid}})))))))))
 
 (defn- dummy-item* [item]
   (if (:db/isComponent item)
@@ -641,10 +659,10 @@
                               :comp (:db/isComponent item)
                               :class (:pace/obj-ref item)
                               :values [(dummy-item* item)]})))]
-      {:key     (:db/ident item)
-       :edit    attrs})
-     {:key   (:db/ident item)
-      :edit  :empty}))
+      {:key (:db/ident item)
+       :edit attrs})
+    {:key (:db/ident item)
+     :edit :empty}))
 
 (defn- dummy-item [item]
   (let [dummy (dummy-item* item)
@@ -659,15 +677,16 @@
                     (:edit data)
                     (:val data))
                 (fn [props]
-                  (let [dummy          (dummy-item item)
-                        attrs          (get-in @app-state [:schema :attrs-by-ident])
+                  (let [dummy (dummy-item item)
+                        attrs (get-in @app-state [:schema :attrs-by-ident])
                         [[idx holder]] (keep-indexed #(if (= (:key %2)
                                                              (:db/ident item))
                                                         [%1 %2]) props)]
                     (if holder
-                      (assoc props idx (assoc holder
-                                         :values (conj (:values holder) dummy)
-                                         :collapsed false))
+                      (assoc props
+                             idx (assoc holder
+                                        :values (conj (:values holder) dummy)
+                                        :collapsed false))
                       (->> (conj props {:key (:db/ident item)
                                         :group (if-let [tags (:pace/tags item)]
                                                  (first (str/split tags #"\s")))
@@ -731,9 +750,9 @@
 
 
 (defn- group-props [props]
-  (loop [grouped         (group-by :group props)
-         [prop & props]  props
-         group-seq       []]
+  (loop [grouped (group-by :group props)
+         [prop & props] props
+         group-seq []]
     (if prop
       (let [g (:group prop)]
         (if-let [gg (grouped g)]
@@ -751,7 +770,7 @@
 
     om/IRenderState
     (render-state [_ state]
-      (let [mode  (om/observe owner (mode))
+      (let [mode (om/observe owner (mode))
             props (or (:props data)
                       (:edit data)
                       (:val data))
@@ -761,36 +780,47 @@
         (dom/div
          (when (:editing mode)
            (om/build add-button data))
-         (dom/table {:border "1"
-                     :className "trace-tree table table-striped table-condensed"}
-          (dom/tbody nil
-           (for [[group-label props] (sort-by first grouped-props)]
-            (list
+         (dom/table
+          {:border "1"
+           :className "trace-tree table table-striped table-condensed"}
+          (dom/tbody
+           nil
+           (for [[group-label props] (sort-by first grouped-props)
+                 :let [expanded (state group-label)
+                       collapsed (not expanded)]]
+             (list
               (if group-label
-                (dom/tr {:style {:background "darkgray"
-                                 :cursor "hand"}
+                (dom/tr {:class "group-separator toggle"
                          :title "Toggle visibility"
                          :on-click #(om/update-state! owner group-label not)}
-                        (dom/td {:colSpan 2}
-                                (str "[" (if (state group-label) "+" "-") "] "
-                                     group-label))))
+                        (dom/th
+                         {:colSpan 3}
+                         (dom/span
+                          {:class "btn"}
+                          (dom/span
+                           {:class (collapse-icon-class expanded)})
+                          (dom/span
+                           {:class "navbar-txt"
+                            :style {:font-weight "bold"}}
+                           group-label)))))
               (for [prop (sort-by :key props)]
-                (dom/tr {:style (display (not (state group-label)))}
-                        (dom/td {:class "prop-name"}
-                           (let [key (:key prop)]
-                             (if (= (namespace key) primary-ns)
-                               (name key)
-                               (str key))))
-                        (dom/td {:class "prop-val"}
-                                (om/build
-                                 list-view prop
-                                 ;; Need to explicitly provide a react key
-                                 {:key :key
-                                  ;; here other wise some very silly element
-                                  ;; recycling can occur when a new property
-                                  ;; gets inserted.
-                                  :opts
-                                  {:entid (:id data)}})))))))))))))
+                (dom/tr
+                 {:style (display collapsed)}
+                 (dom/td {:class "prop-name"}
+                         (let [key (:key prop)]
+                           (if (= (namespace key) primary-ns)
+                             (name key)
+                             (str key))))
+                 (dom/td {:class "prop-val"} 
+                         (om/build
+                          list-view prop
+                          ;; Need to explicitly provide a react key
+                          {:key :key
+                           ;; here other wise some very silly element
+                           ;; recycling can occur when a new property
+                           ;; gets inserted.
+                           :opts
+                           {:entid (:id data)}})))))))))))))
 
 (defn- pack-id [id]
   (if (string? id)
@@ -875,7 +905,7 @@
     (render [_]
       (dom/span
        (str (or (om/value (:ident app))
-                                   "TrACeView"))))))
+                "TrACeView"))))))
 
 (defn- trace-load [app c i]
   (om/update! app [:mode :loading] true)
@@ -885,35 +915,37 @@
      (set! (.-title js/document) i)
      (if resp
        (do
-         (om/transact! app (fn [app]
-                             (assoc app
-                                    :mode    (merge (:mode app)
-                                                    {:loading false
-                                                     :editing false})
-                                    :error   nil
-                                    :props   (props->state (:props resp))
-                                    :txns    (->> (for [t (:txns resp)]
-                                                    [(:db/id t) t])
-                                                  (into (if (= (:id resp) (:id app))
-                                                          (:txns app)
-                                                          ;; Start again with empty
-                                                          ;; txn map if moving
-                                                          ;; to a new object
-                                                          {})))
-                                    :id      (:id resp)
-                                    :ident [(keyword c "id") i])))
+         (om/transact!
+          app (fn [app]
+                (assoc app
+                       :mode (merge (:mode app)
+                                    {:loading false
+                                     :editing false})
+                       :error nil
+                       :props (props->state (:props resp))
+                       :txns (->> (for [t (:txns resp)]
+                                    [(:db/id t) t])
+                                  (into (if (= (:id resp) (:id app))
+                                          (:txns app)
+                                          ;; Start again with empty
+                                          ;; txn map if moving
+                                          ;; to a new object
+                                          {})))
+                       :id (:id resp)
+                       :ident [(keyword c "id") i])))
          (if (:txnData (:mode @app))
            (fetch-missing-txns app)))
-       (om/transact! app (fn [app]
-                           (assoc app
-                                  :error (str "Couldn't load " i)
-                                  :mode  (merge (:mode app)
-                                                {:loading false
-                                                 :editing false})
-                                  :props nil
-                                  :txns {}
-                                  :id i
-                                  :ident [(keyword c "id") i])))))))
+       (om/transact!
+        app (fn [app]
+              (assoc app
+                     :error (str "Couldn't load " i)
+                     :mode  (merge (:mode app)
+                                   {:loading false
+                                    :editing false})
+                     :props nil
+                     :txns {}
+                     :id i
+                     :ident [(keyword c "id") i])))))))
 
 (defn trace-view [app owner]
   (reify
@@ -923,10 +955,11 @@
         (trace-load app c i))
 
       (secretary/dispatch! (.-pathname js/window.location))
-      (.addEventListener js/window
-                         "popstate"
-                         (fn [e]
-                           (secretary/dispatch! (.-pathname js/window.location)))))
+      (.addEventListener
+       js/window
+       "popstate"
+       (fn [e]
+         (secretary/dispatch! (.-pathname js/window.location)))))
     om/IDidMount
     (did-mount [_]
       (.addEventListener js/window
@@ -943,7 +976,11 @@
 
                  (and ctrl (= code 84))
                  (do
-                   (if (:txnData (:mode @(om/transact! app [:mode :txnData] not)))
+                   (if (:txnData
+                        (:mode @(om/transact!
+                                 app
+                                 [:mode :txnData]
+                                 not)))
                      (fetch-missing-txns app))
                    true)
 
@@ -988,58 +1025,56 @@
          (dom/div
           {}
           (dom/label
+           {:title "Show timestamps (providence)"
+            :class "providence"}
            "Timestamps"
-           (dom/input {:type "checkbox"
-                       :checked (:txnData (:mode app))
-                       :on-click
-                       (fn [_]
-                         (if (:txnData
-                              (:mode
-                               @(om/transact!
-                                 app
-                                 [:mode :txnData]
-                                 not)))
-                           (fetch-missing-txns app)))}))
+           (dom/input
+            {:type "checkbox"
+             :checked (:txnData (:mode app))
+             :on-click
+             (fn [_]
+               (if (:txnData
+                    (:mode
+                     @(om/transact!
+                       app
+                       [:mode :txnData]
+                       not)))
+                 (fetch-missing-txns app)))}))
 
-                  (when (:fetching-schema mode)
-                    (dom/span "Fetching schema..."))
+          (when (:fetching-schema mode)
+            (dom/span "Fetching schema..."))
 
-                  (when-not (:fetching-schema mode)
-                    [
-                    (when (and js/trace_logged_in
-                               (not (:editing mode)))
-                      (dom/button {:on-click #(edit app)}
-                                   "Edit"))
+          (when-not (:fetching-schema mode)
+            [(when (and js/trace_logged_in (not (:editing mode)))
+               (dom/button {:on-click #(edit app)} "Edit"))
+             
+             #_(when (and js/trace_logged_in
+                          (:editing mode))
+                 (dom/button {:on-click
+                              #(println (gather-txdata
+                                         (:id @app-state)
+                                         (:props @app-state)))}
+                             "Preview"))
+             (when (and js/trace_logged_in (:editing mode))
+               (dom/button
+                {:on-click #(submit app)
+                 :disabled
+                 (empty? (gather-txdata
+                          (:id @app-state)
+                          (:props @app-state)))}
+                "Save"))
 
-                     #_(when (and js/trace_logged_in
-                                  (:editing mode))
-                         (dom/button {:on-click
-                                      #(println (gather-txdata
-                                                 (:id @app-state)
-                                                 (:props @app-state)))}
-                                     "Preview"))
+             (when (and js/trace_logged_in
+                        (:editing mode))
+               (dom/button {:on-click #(cancel app)}
+                           "Cancel"))])
 
-                      (when (and js/trace_logged_in
-                                 (:editing mode))
-                        (dom/button
-                         {:on-click #(submit app)
-                          :disabled
-                          (empty? (gather-txdata
-                                   (:id @app-state)
-                                   (:props @app-state)))}
-                         "Save"))
-
-                      (when (and js/trace_logged_in
-                                 (:editing mode))
-                        (dom/button {:on-click #(cancel app)}
-                                    "Cancel"))])
-
-                  (dom/span {:style {:color "red"}} (:err app))))))))
+          (dom/span {:style {:color "red"}} (:err app))))))))
 
 (defn init-trace []
-  (om/root trace-view    app-state {:target (gdom/getElement "tree")})
-  (om/root trace-title   app-state {:target (gdom/getElement "page-title")})
-  (om/root trace-tools   app-state {:target (gdom/getElement "header-content")})
+  (om/root trace-view app-state {:target (gdom/getElement "tree")})
+  (om/root trace-title app-state {:target (gdom/getElement "page-title")})
+  (om/root trace-tools app-state {:target (gdom/getElement "header-content")})
   ;; Non-OM code, needs to explicitly deref the app-state atom to
   ;; see if we're currently editing.
   (.addEventListener

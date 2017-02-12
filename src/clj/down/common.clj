@@ -1,8 +1,8 @@
-(ns web.common
+(ns down.common
   (:require
    [datomic.api :as d]
-   [environ.core :refer [env]]
-   [web.db :refer [ws-version]]))
+   [down.db :refer [ws-version]]
+   [environ.core :refer [env]]))
 
 (def head
   [:head
@@ -24,12 +24,16 @@
 (defn identity-header
   [db]
   [:div.header-identity
-   [:div {:style "display: inline-block"}
-    [:img.banner {:src "/img/logo_wormbase_gradient_small.png"}]
+   [:div 
+    [:a.logo-link
+     {:href "/"
+      :title "Colonnade"}
+     [:img.banner
+      {:src "/img/logo_wormbase_gradient_small.png"}]]
     (if-let [name (:wormbase/system-name
                    (d/entity db :wormbase/system))]
       [:div.system-name name]
       [:div.system-name
        {:title (str "Datomic URI: " (env :wb-db-uri))}
-        [:b (str "Data release:&nbsp;"
-                 (ws-version))]])]])
+       [:span
+        [:b (str "Release:&nbsp;" (ws-version))]]])]])
