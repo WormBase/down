@@ -1,6 +1,6 @@
 # Change log
 
-## [0.2] - (unreleased)
+## [0.2] - (2017-02-13)
  - Made compilation of assets (CSS, JavaScript) work for dev and prod
    targets.
  - Simplified Makefile, such that `make help` now prints documentation
