@@ -1,19 +1,21 @@
-(ns trace.utils
+(ns thomas.utils
   (:require [cljs.reader :as reader]))
 
 (defn edn-xhr
-  "Fetch `uri`.  Invoke `callback` with an edn-parsed response, or `nil` if the request fails."
+  "Fetch `uri`.
+  Invoke `callback` with an edn-parsed response,
+  or `nil` if the request fails."
   [uri callback]
   (let [x (js/XMLHttpRequest.)]
     (.open x "GET" uri true)
     (.addEventListener
-       x
-       "load" 
-       (fn []
-         (callback
-          (if (= (.-status x) 200)
-            (reader/read-string (.-responseText x)))))
-       false)
+     x
+     "load" 
+     (fn []
+       (callback
+        (if (= (.-status x) 200)
+          (reader/read-string (.-responseText x)))))
+     false)
     (.send x)))
 
 (defn edn-xhr-post [uri body callback]
@@ -30,7 +32,7 @@
                                     (.-responseText x))}))
        false)
     (.setRequestHeader x "Content-Type" "application/edn")
-    (.setRequestHeader x "X-XSRF-Token" js/trace_token)
+    (.setRequestHeader x "X-CSRF-Token" js/csrf_token)
     (.send x (pr-str body))))
 
 (defn conj-if

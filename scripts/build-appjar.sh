@@ -6,8 +6,6 @@
 #   2. $artefact: path to jar file to be created.
 target_profile="$1"
 artefact="$2"
-lein cljsbuild once "${target_profile}"
-lein minify-assets "${target_profile}"
 path=`lein with-profile +${target_profile} ring uberjar | \
 	    sed -n 's|^Created \(\/.*standalone.jar\)|\1|p'`
 mv "${path}" "${artefact}"

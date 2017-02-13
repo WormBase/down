@@ -1,32 +1,12 @@
 {
-    "AWSEBDockerrunVersion": 2,
-    "containerDefinitions": [{
-	"name": "down-app",
-	"image": "357210185381.dkr.ecr.us-east-1.amazonaws.com/wormbase/down:0.1",
-	"essential": true,
-	"memory": 4096,
-	"portMappings": [{
-	    "hostPort": 3000,
-	    "containerPort": 3000
-	}],
-	"environment": [{
-	    "name": "TRACE_DB",
-	    "value": "datomic:ddb://us-east-1/WS257/wormbase"
-	}, {
-	    "name": "TRACE_REQUIRE_LOGIN",
-	    "value": "0"
-	}]
-    }, {
-	"name": "down_http-proxy",
-	"image": "357210185381.dkr.ecr.us-east-1.amazonaws.com/wormbase/down_nginx-proxy:0.1",
-	"essential": true,
-	"memory": 128,
-	"portMappings": [{
-	    "hostPort": 80,
-	    "containerPort": 80
-	}],
-	"links": [
-	    "down-app"
-	]
-    }]
+    "AWSEBDockerrunVersion": 1,
+    "Image": {
+	"Name": "357210185381.dkr.ecr.us-east-1.amazonaws.com/wormbase/down:0.1",
+	"Update": "true"
+    },
+    "Ports": [
+	{
+	    "ContainerPort": "3000"
+	}
+    ]
 }

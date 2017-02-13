@@ -1,17 +1,16 @@
-(ns web.users
+(ns down.users
   (:require
    [base64-clj.core :as base64]
    [cemerick.friend :as friend]
    [cemerick.friend.credentials :as creds]
-   [cemerick.friend.workflows :refer (make-auth)]
-   [cheshire.core :as json :refer (parse-string)]
+   [cemerick.friend.workflows :refer [make-auth]]
+   [cheshire.core :as json :refer [parse-string]]
    [clojure.string :as str]
    [datomic.api :as d]
-   [environ.core :refer (env)]
-   [friend-oauth2.util :refer (format-config-uri)]
-   [friend-oauth2.workflow :as oauth2]
-   [web.curate.schema :refer (curation-schema curation-init curation-fns)]
-   [web.util :refer (allow-anonymous?)]))
+   [down.util :refer [allow-anonymous?]]
+   [environ.core :refer [env]]
+   [friend-oauth2.util :refer [format-config-uri]]
+   [friend-oauth2.workflow :as oauth2]))
 
 (def schema
   [{:db/id          (d/tempid :db.part/db)
@@ -58,15 +57,6 @@
   {:db/id               (d/tempid :db.part/user)
    :user/name           username
    :user/bcrypt-passwd  (creds/hash-bcrypt passwd)})
-
-(defn setup-schema
-  "Setup the users' schema."
-  [uri]
-  (let [con (d/connect uri)]
-    @(d/transact con schema)
-    @(d/transact con (butlast curation-schema))
-    @(d/transact con (butlast curation-init))
-    @(d/transact con (butlast curation-fns))))
 
 (defn- flex-decode [s]
   (let [m (mod (count s) 4)
@@ -125,12 +115,12 @@
     :access-token-parsefn goog-token-parse
     :credential-fn (partial goog-credential-fn db)}))
 
-(defn authenticate* [db]
-  (let [allow-anon? (allow-anonymous?)]
-    #(friend/authenticate
-      %
-      {:allow-anon? allow-anon?
-       :workflows [(make-workflow db client-config uri-config)]})))
-
-(defn make-authenticator [db]
-  (authenticate* db))
+(defn wrap-authentication [handler]
+  (fn [request]
+    (let [allow-anon? (allow-anonymous?)
+          db (:db request)
+          auth (friend/authenticate
+                handler
+                {:allow-anon? allow-anon?
+                 :workflows [(make-workflow db client-config uri-config)]})]
+      (auth request))))

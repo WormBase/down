@@ -1,5 +1,5 @@
-(ns web.edn
-  (:require [clojure.edn]
+(ns down.edn
+  (:require [clojure.edn :as edn]
             [datomic.api :as d]))
 
 (def ^:private reader-map
@@ -16,17 +16,16 @@
 (extend-type String
   EdnRead
   (-read-edn [s]
-    (clojure.edn/read-string {:readers reader-map} s)))
+    (edn/read-string {:readers reader-map} s)))
 
 (extend-type java.io.InputStream
   EdnRead
   (-read-edn [is]
-    (clojure.edn/read
+    (edn/read
      {:eof nil
       :readers reader-map}
      (java.io.PushbackReader.
-                       (java.io.InputStreamReader.
-                        is "UTF-8")))))
+      (java.io.InputStreamReader. is "UTF-8")))))
 
 (defn wrap-edn-params-2
   [handler]

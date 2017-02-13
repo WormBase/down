@@ -31,10 +31,5 @@ target/
 # Docker
 docker/app.jar
 
-# Generated and minfied assets
-*.min.css
-*.min.js
-/resources/public/js/out-dev/
-/resources/public/js/out/
-resources/public/js/main*.js*
-/resources/public/js/site.js.map
+# Generated and minfied assets (css + js)
+/resources/public/compiled
