@@ -35,8 +35,7 @@ help: ; @echo $(if $(need-help),,\
 
 # Targets
 
-${DEPLOY_JAR}: cljs-build-prod \
-               $(call print-help,${DEPLOY_JAR}, "Build the jar file")
+${DEPLOY_JAR}: $(call print-help,${DEPLOY_JAR}, "Build the jar file")
 	@lein with-profile +datomic-pro ring uberjar
 	@mv target/uberjar/app.jar ${DEPLOY_JAR}
 
