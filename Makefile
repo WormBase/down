@@ -97,13 +97,12 @@ pre-release-test: $(call print-help,pre-release-test,\
 eb-create: $(call print-help,eb-create,\
              "Create an ElasticBeanStalk environment using \
               the Docker platform.")
-	echo ${WS_VERSION}
 	@eb create ${APP_SHORT_NAME} \
                --region=${AWS_DEFAULT_REGION} \
                --tags="CreatedBy=${AWS_EB_PROFILE},Role=WebService" \
                --instance_type=${EC2_INSTANCE_TYPE} \
                --platform=${EB_PLATFORM} \
-               --cname="${APP_SHORT_NAME}-${WS_VERSION}" \
+               --cname=${APP_SHORT_NAME} \
                --vpc.id=${AWS_VPC_ID} \
                --vpc.ec2subnets=${AWS_VPC_EC2SUBNETS} \
                --vpc.securitygroups=${AWS_VPC_SECGROUPS} \
