@@ -67,7 +67,7 @@
    ;; Uncomment to prevent missing trace (HotSpot optimisation)
    ;; "-XX:-OmitStackTraceInFastThrow"
    ]
-  :min-lein-version "2.6.1"
+  :min-lein-version "2.7.1"
   :minify-assets
   {:dev
    {:assets
