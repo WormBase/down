@@ -3,10 +3,11 @@
                                     :compile-path
                                     "resources/public/compiled/css"
                                     "resources/public/compiled/js"]
+  :clojurescript? true
   :cljsbuild
   {:builds
    {:dev
-    {:source-paths ["src"]
+    {:source-paths ["src/cljs"]
      :compiler
      {:asset-path "compiled/js/out-dev"
       :optimizations :whitespace
@@ -15,7 +16,7 @@
       :pretty-print true
       :source-map "resources/public/compiled/js/site.js.map"}}
     :prod
-    {:source-paths ["src"]
+    {:source-paths ["src/cljs"]
      :jar true
      :compiler
      {:asset-path "compiled/js/out-prod"
@@ -80,28 +81,29 @@
      "resources/public/css/trace.css"}
     :options {:optimization :advanced}}}
   :main ^:skip-aot down.core
+  :hooks [leiningen.cljsbuild]
   :plugins [[lein-asset-minifier "0.3.0"]
             [lein-cljsbuild "1.1.3"]
             [lein-environ "1.1.0"]
             [lein-pprint "1.1.1"]
             [lein-ring "0.9.7"]]
-  :profiles {:dev
-             {:plugins
-              [[jonase/eastwood "0.2.3"
-                :exclusions [org.clojure/clojure]]
-               [lein-ancient "0.6.8"]
-               [ring/ring-devel "1.5.1"]]
-               :env {:wb-db-uri "datomic:dev://localhost:4334/WS257"
-                     :wb-require-login "0"}
-               :ring {:nrepl {:start? true}}
-               :resource-paths ["test/resources"]}
-             :prod
+  :profiles {:datomic-pro
              {:dependencies
               [[com.datomic/datomic-pro "0.9.5554"
                 :exclusions [com.google.guava/guava
                              joda-time]]
                [com.amazonaws/aws-java-sdk-dynamodb "1.11.6"
                 :exclusions [joda-time]]]}
+             :dev [:datomic-pro
+                   {:plugins
+                    [[jonase/eastwood "0.2.3"
+                      :exclusions [org.clojure/clojure]]
+                     [lein-ancient "0.6.8"]
+                     [ring/ring-devel "1.5.1"]]
+                    :env {:wb-db-uri "datomic:dev://localhost:4334/WS257"
+                          :wb-require-login "0"}
+                    :ring {:nrepl {:start? true}}
+                    :resource-paths ["test/resources"]}]
              :uberjar
              {:aot :all
               :env {:wb-require-login "0"
@@ -111,5 +113,7 @@
   :resource-paths ["resources"]
   :ring {:init down.core/init
          :handler down.core/endpoint}
-  :source-paths ["src/clj" "src/cljs"]
-  :target-path "target/%s/")
+  :uberjar-name "app.jar"
+  :omit-source true
+  :source-paths ["src/clj"]
+  :target-path "target/%s")
