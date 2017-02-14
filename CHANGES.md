@@ -1,5 +1,8 @@
 # Change log
 
+## [0.4] - (unreleased)
+ - Nothing changed yet.
+ 
 ## [0.3] - (2017-02-14)
  - Fixed issue with JavaScript references when running from uberjar.
  - Split up documentation.
