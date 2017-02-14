@@ -3,9 +3,9 @@ APP_CONTAINER_NAME := wormbase/down
 APP_SHORT_NAME := down
 VERSION ?= $(shell git describe --always --abbrev=0 --tags)
 EBX_CONFIG = .ebextensions/.config
-DB_URI ?= $(shell sed -rn 's|value:\s+(datomic.*)/wormbase|\1|p' ${EBX_CONFIG} | \
-	          tr -d " ")
-WS_VERSION ?= $(shell echo ${DB_URI} | \
+WB_DB_URI ?= $(shell sed -rn 's|value:\s+(datomic:.*/wormbase)|\1|p' \
+                             ${EBX_CONFIG} | tr -d " ")
+WS_VERSION ?= $(shell echo ${WB_DB_URI} | \
                       sed -rn 's|datomic.*(WS\d*)|\1|p' | \
                 tr -d " ")
 WS_VERSION_LC ?= $(shell echo ${WS_VERSION} | tr A-Z a-z)
