@@ -35,18 +35,10 @@ help: ; @echo $(if $(need-help),,\
 
 # Targets
 
-.PHONY: cljs-build-dev
-cljs-build-dev:
-	@./scripts/cljsbuild.sh dev
-
-.PHONY: cljs-build-prod
-cljs-build-prod:
-	@./scripts/cljsbuild.sh prod
-
-
 ${DEPLOY_JAR}: cljs-build-prod \
                $(call print-help,${DEPLOY_JAR}, "Build the jar file")
-	@./scripts/build-appjar.sh prod ${DEPLOY_JAR}
+	@lein with-profile +datomic-pro ring uberjar
+	@mv target/uberjar/app.jar ${DEPLOY_JAR}
 
 .PHONY: print-ws-version
 print-ws-version:
