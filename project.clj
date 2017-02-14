@@ -1,4 +1,4 @@
-(defproject wormbase/down "0.3-SNAPSHOT"
+(defproject wormbase/down "0.3"
   :clean-targets ^{:protect false} [:target-path
                                     :compile-path
                                     "resources/public/compiled/css"
