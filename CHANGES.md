@@ -1,7 +1,8 @@
 # Change log
 
 ## [0.3] - (unreleased)
- - Nothing changed yet.
+ - Fixed issue with JavaScript references when running from uberjar.
+ - Split up documentation.
  
 ## [0.2] - (2017-02-13)
  - Made compilation of assets (CSS, JavaScript) work for dev and prod
