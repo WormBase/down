@@ -1,5 +1,8 @@
 # Change log
 
+## [0.3] - (unreleased)
+ - Nothing changed yet.
+ 
 ## [0.2] - (2017-02-13)
  - Made compilation of assets (CSS, JavaScript) work for dev and prod
    targets.
