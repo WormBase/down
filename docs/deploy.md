@@ -34,8 +34,18 @@ For first-time deployment (new application in elasticbeanstalk), use:
 
 ```make eb-create```
 
+N.B: You can safely ignore any errors from the Makefile command when you
+issue a Ctrl-C command.
+
 For subsequent deployments, use `eb deploy`.
 
+Use the `eb` command to display status of the deployment.
+e.g:
+
+```bash
+eb status
+eb events -f
+```
 
 [1]: https://aws.amazon.com/elasticbeanstalk/
 [2]: https://github.com/WormBase/wormbase-architecture/wiki/AWS-Credentials
