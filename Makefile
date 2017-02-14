@@ -20,6 +20,7 @@ AWS_VPC_ID := "vpc-8e0087e9"
 AWS_VPC_EC2SUBNETS := "subnet-a33a2bd5"
 AWS_VPC_SECGROUPS := "sg-2c332257"
 EC2_INSTANCE_TYPE := "m3.xlarge"
+EB_PLATFORM := "64bit Amazon Linux 2016.09 v2.5.0 running Docker 1.12.6"
 
 # Makefile help system
 
@@ -88,15 +89,15 @@ docker-run:
 		--detach \
 		-e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
 		-e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
-		-e WB_DB_URI=${DB_URI} \
+		-e WB_DB_URI=${WB_DB_URI} \
 		-e WB_REQUIRE_LOGIN="0" \
 		 ${APP_CONTAINER_NAME}:${VERSION}
 
 .PHONY: docker-clean
 docker-clean: $(call print-help,docker-clean,\
                "Stops and removes arunning docker application container.")
-	@docker stop down
-	@docker rm down
+	@docker stop ${APP_SHORT_NAME}
+	@docker rm ${APP_SHORT_NAME}
 
 .PHONY: run
 run: $(call print-help,run, \
@@ -114,11 +115,13 @@ pre-release-test: $(call print-help,pre-release-test,\
 eb-create: $(call print-help,eb-create,\
              "Create an ElasticBeanStalk environment using \
               the Docker platform.")
-	@eb create down-${WS_VERSION} \
+	echo ${WS_VERSION}
+	@eb create ${APP_SHORT_NAME} \
                --region=${AWS_DEFAULT_REGION} \
                --tags="CreatedBy=${AWS_EB_PROFILE},Role=WebService" \
-               --instance-type=${EC2_INSTANCE_TYPE} \
-               --cname="down=${WS_VERSION}" \
+               --instance_type=${EC2_INSTANCE_TYPE} \
+               --platform=${EB_PLATFORM} \
+               --cname="${APP_SHORT_NAME}-${WS_VERSION}" \
                --vpc.id=${AWS_VPC_ID} \
                --vpc.ec2subnets=${AWS_VPC_EC2SUBNETS} \
                --vpc.securitygroups=${AWS_VPC_SECGROUPS} \
