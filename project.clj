@@ -100,14 +100,14 @@
                       :exclusions [org.clojure/clojure]]
                      [lein-ancient "0.6.8"]
                      [ring/ring-devel "1.5.1"]]
-                    :env {:wb-db-uri "datomic:dev://localhost:4334/WS257"
+                    :env {:wb-db-uri "datomic:dev://localhost:4334/WS258"
                           :wb-require-login "0"}
                     :ring {:nrepl {:start? true}}
                     :resource-paths ["test/resources"]}]
              :uberjar
              {:aot :all
               :env {:wb-require-login "0"
-                    :wb-db-uri "datomic:ddb://us-east-1/WS257/wormbase"}
+                    :wb-db-uri "datomic:ddb://us-east-1/WS258/wormbase"}
               :hooks [minify-assets.plugin/hooks]
               :prep-tasks ["compile" ["cljsbuild" "once" "prod"]]}}
   :resource-paths ["resources"]
