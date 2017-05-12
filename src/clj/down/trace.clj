@@ -84,7 +84,9 @@
                  (= :importer/temp ident)))
       {:key ident
        :group (if-let [tags (:pace/tags attr)]
-                (first (str/split tags #" "))
+                (if (= (namespace (:db/ident attr)) "locatable")
+                  "Locatable"
+                  (first (str/split tags #" ")))
                 (if (= (name ident) "id")
                   (pr-str ident)
                   "Locatable"))
