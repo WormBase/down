@@ -10,7 +10,7 @@ First, ensure to set your [AWS Credentials][2].
 
 1. Ensure to update version numbers to reflect intended release tag in
    top-level files:
-   3.1 `CHANGES.md`
+   3.1 `CHANGELOG.md`
    3.2 `project.clj`
    3.3 `Dockerrun.aws.json`
 2. Package the uberjar file and create the docker container
