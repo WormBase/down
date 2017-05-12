@@ -1,7 +1,8 @@
 # Change log
 
 ## [0.4] - (unreleased)
- - Nothing changed yet.
+ - Handling of the "locatable" namespace for TrACeView.
+ - Bump WS_RELEASE version.
  
 ## [0.3] - (2017-02-14)
  - Fixed issue with JavaScript references when running from uberjar.
