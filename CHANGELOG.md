@@ -1,5 +1,8 @@
 # Change log
 
+## [0.5] - (un-released)
+ - Nothing changed yet.
+ 
 ## [0.4] - (2017-05-12)
  - Handling of the "locatable" namespace for TrACeView.
  - Bump WS_RELEASE version to WS258.
