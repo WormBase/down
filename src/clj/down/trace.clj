@@ -77,7 +77,6 @@
                         (touch-link-ref ke i))))
                v)]))))
 
-
 (defn obj2-attr [db maxcount exclude datoms]
   (let [attr (d/entity db (:a (first datoms)))
         ident (:db/ident attr)]
@@ -85,7 +84,9 @@
                  (= :importer/temp ident)))
       {:key ident
        :group (if-let [tags (:pace/tags attr)]
-                (first (str/split tags #" "))
+                (if (= (namespace (:db/ident attr)) "locatable")
+                  "Locatable"
+                  (first (str/split tags #" ")))
                 (if (= (name ident) "id")
                   (pr-str ident)
                   "Locatable"))

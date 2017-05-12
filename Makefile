@@ -5,10 +5,6 @@ VERSION ?= $(shell git describe --always --abbrev=0 --tags)
 EBX_CONFIG = .ebextensions/.config
 WB_DB_URI ?= $(shell sed -rn 's|value:\s+(datomic:.*/wormbase)|\1|p' \
                              ${EBX_CONFIG} | tr -d " ")
-WS_VERSION ?= $(shell echo ${WB_DB_URI} | \
-                      sed -rn 's|datomic.*(WS\d*)|\1|p' | \
-                tr -d " ")
-WS_VERSION_LC ?= $(shell echo ${WS_VERSION} | tr A-Z a-z)
 DEPLOY_JAR := docker/app.jar
 WB_ACC_NUM := 357210185381
 FQ_PREFIX := ${WB_ACC_NUM}.dkr.ecr.us-east-1.amazonaws.com
@@ -38,11 +34,6 @@ help: ; @echo $(if $(need-help),,\
 ${DEPLOY_JAR}: $(call print-help,${DEPLOY_JAR}, "Build the jar file")
 	@lein with-profile +datomic-pro ring uberjar
 	@mv target/uberjar/app.jar ${DEPLOY_JAR}
-
-.PHONY: print-ws-version
-print-ws-version:
-	@echo ${WS_VERSION}
-	@echo ${WS_VERSION_LC}
 
 .PHONY: docker-build
 docker-build: $(call print-help,docker-build,\
@@ -106,13 +97,12 @@ pre-release-test: $(call print-help,pre-release-test,\
 eb-create: $(call print-help,eb-create,\
              "Create an ElasticBeanStalk environment using \
               the Docker platform.")
-	echo ${WS_VERSION}
 	@eb create ${APP_SHORT_NAME} \
                --region=${AWS_DEFAULT_REGION} \
                --tags="CreatedBy=${AWS_EB_PROFILE},Role=WebService" \
                --instance_type=${EC2_INSTANCE_TYPE} \
                --platform=${EB_PLATFORM} \
-               --cname="${APP_SHORT_NAME}-${WS_VERSION}" \
+               --cname=${APP_SHORT_NAME} \
                --vpc.id=${AWS_VPC_ID} \
                --vpc.ec2subnets=${AWS_VPC_EC2SUBNETS} \
                --vpc.securitygroups=${AWS_VPC_SECGROUPS} \
