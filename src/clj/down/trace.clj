@@ -77,7 +77,6 @@
                         (touch-link-ref ke i))))
                v)]))))
 
-
 (defn obj2-attr [db maxcount exclude datoms]
   (let [attr (d/entity db (:a (first datoms)))
         ident (:db/ident attr)]
