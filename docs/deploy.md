@@ -17,12 +17,10 @@ First, ensure to set your [AWS Credentials][2].
    ```bash
    # e.g: If current version is 0.1, then CANDIDATE_RELEASE_TAG = 0.2
    git tag -a $CANDIDATE_RELEASE_TAG -m "test tag"
-   make pre-release-test
+   make docker-clean pre-release-test
    ```
 3. Test the application runs locally in Docker
    ```bash
-   make docker-clean
-   make docker-run
    python -m webbrowser http://172.17.0.1:3000
    ```
    Test the user interface works.
