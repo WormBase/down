@@ -8,20 +8,28 @@ First, ensure to set your [AWS Credentials][2].
 
 ### Preparation
 
-1. Package the uberjar file and create the docker container
-   ```bash
-   make pre-release-test
-   ```
-2. Test the application runs locally in Docker
-   ```bash
-   make docker-run
-   python -m webbrowser http://172.17.0.1:3000
-   ```
-3. Ensure to update version numbers to reflect intended release tag in
+1. Ensure to update version numbers to reflect intended release tag in
    top-level files:
    3.1 `CHANGES.md`
    3.2 `project.clj`
    3.3 `Dockerrun.aws.json`
+2. Package the uberjar file and create the docker container
+   ```bash
+   # e.g: If current version is 0.1, then CANDIDATE_RELEASE_TAG = 0.2
+   git tag -a $CANDIDATE_RELEASE_TAG -m "test tag"
+   make pre-release-test
+   ```
+3. Test the application runs locally in Docker
+   ```bash
+   make docker-clean
+   make docker-run
+   python -m webbrowser http://172.17.0.1:3000
+   ```
+   Test the user interface works.
+   Remove the test-tag:
+   ```bash
+   git tag -d $CANDIDATE_RELEASE_TAG
+   ```
 4. With git, merge develop to master, checkout master create and push tag.
 5. Create the docker-container afresh:
    ```bash
